@@ -33,7 +33,7 @@
         min-height: 100vh;
         background:
           linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72)),
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Cg opacity='0.16'%3E%3Cpath d='M0 0H1200V800H0Z' fill='%23f1f1f1'/%3E%3Cpath d='M260 0L0 420L0 800H1200V700L900 0H260Z' fill='%23b7191f'/%3E%3Cpath d='M0 100L1030 800H1200V800H0V100Z' fill='%23dcdcdc'/%3E%3C/svg%3E") center/cover no-repeat fixed;
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Cg opacity='0.16'%3E%3Cpath d='M0 0H1200V800H0Z' fill='%23f1f1f1'/%3E%3Ccircle cx='200' cy='100' r='80' fill='none' stroke='%23999' stroke-width='1'/%3E%3Ccircle cx='600' cy='400' r='120' fill='none' stroke='%23999' stroke-width='1'/%3E%3Ccircle cx='1000' cy='200' r='100' fill='none' stroke='%23999' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
       }
 
       .page-shell {
@@ -88,11 +88,79 @@
         border: 1px solid var(--line);
       }
 
-      .players-panel, .schedule-panel {
+      .match-panel, .players-panel, .schedule-panel {
         background: var(--panel);
         border: 1px solid rgba(0,0,0,0.08);
         border-radius: 18px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      }
+
+      .match-panel {
+        padding: 16px;
+        margin-bottom: 22px;
+      }
+
+      .match-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .match-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        align-items: flex-end;
+        margin-bottom: 20px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .form-group label {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+
+      .match-card {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--red);
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .match-info {
+        flex: 1;
+      }
+
+      .match-info h3 {
+        margin: 0 0 4px 0;
+        font-size: 1rem;
+      }
+
+      .match-info p {
+        margin: 2px 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .match-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .match-actions button {
+        padding: 6px 12px;
+        font-size: 0.85rem;
       }
 
       .players-panel {
@@ -156,7 +224,7 @@
         text-align: left;
       }
 
-      input[type="text"], input[type="number"], select {
+      input[type="text"], input[type="number"], input[type="date"], select {
         width: 100%;
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -261,13 +329,14 @@
         .topbar { flex-direction: column; align-items: flex-start; }
         .actions { width: 100%; }
         .actions button { flex: 1 1 140px; }
+        .match-form { grid-template-columns: 1fr; }
       }
 
       @media print {
         body { background: white; }
-        .topbar, .actions, .status { display: none !important; }
+        .topbar, .actions, .status, .match-panel, .players-panel { display: none !important; }
         .page-shell { margin: 0; max-width: none; padding: 0; }
-        .players-panel, .schedule-panel {
+        .schedule-panel {
           box-shadow: none;
           border: none;
           background: white;
@@ -287,6 +356,26 @@
           <button class="secondary" id="printBtn">Print</button>
         </div>
       </header>
+
+      <section class="match-panel">
+        <div class="panel-header">
+          <h2>Wedstrijden</h2>
+        </div>
+
+        <div class="match-form">
+          <div class="form-group">
+            <label>Datum</label>
+            <input type="date" id="matchDate" />
+          </div>
+          <div class="form-group">
+            <label>Tegenstander</label>
+            <input type="text" id="matchOpponent" placeholder="Tegenstander" />
+          </div>
+          <button class="primary" id="addMatchBtn">Wedstrijd toevoegen</button>
+        </div>
+
+        <div class="match-grid" id="matchGrid"></div>
+      </section>
 
       <section class="players-panel">
         <div class="panel-header">
@@ -310,6 +399,9 @@
       </section>
 
       <section class="schedule-panel">
+        <div class="panel-header">
+          <h2>Roulatieschema</h2>
+        </div>
         <div class="schedule-grid" id="scheduleGrid"></div>
       </section>
     </div>
@@ -336,7 +428,8 @@
       function getDefaultState() {
         return {
           players: basePlayers.map((player) => ({ ...player, roles: { ...player.roles } })),
-          periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) }))
+          periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) })),
+          matches: []
         };
       }
 
@@ -355,7 +448,9 @@
               }))
             : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) }));
 
-          return { players, periods };
+          const matches = Array.isArray(saved.matches) ? saved.matches : [];
+
+          return { players, periods, matches };
         } catch {
           return getDefaultState();
         }
@@ -365,6 +460,10 @@
       const playersBody = document.getElementById("playersBody");
       const scheduleGrid = document.getElementById("scheduleGrid");
       const presenceSummary = document.getElementById("presenceSummary");
+      const matchGrid = document.getElementById("matchGrid");
+      const addMatchBtn = document.getElementById("addMatchBtn");
+      const matchDateInput = document.getElementById("matchDate");
+      const matchOpponentInput = document.getElementById("matchOpponent");
 
       function saveState() {
         localStorage.setItem("basketballRotationState", JSON.stringify(state));
@@ -456,6 +555,77 @@
         }).join("");
       }
 
+      function renderMatches() {
+        matchGrid.innerHTML = state.matches.map((match, index) => {
+          const date = new Date(match.date);
+          const dateStr = date.toLocaleDateString("nl-NL", { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+          return `
+            <div class="match-card">
+              <div class="match-info">
+                <h3>${match.opponent}</h3>
+                <p>${dateStr}</p>
+              </div>
+              <div class="match-actions">
+                <button class="secondary" data-index="${index}" id="loadMatchBtn">Schema laden</button>
+                <button class="secondary" data-index="${index}" id="deleteMatchBtn">Verwijderen</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+
+        // Add event listeners to load and delete buttons
+        document.querySelectorAll("#loadMatchBtn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            const index = parseInt(e.target.dataset.index);
+            loadMatchSchedule(index);
+          });
+        });
+
+        document.querySelectorAll("#deleteMatchBtn").forEach(btn => {
+          btn.addEventListener("click", (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteMatch(index);
+          });
+        });
+      }
+
+      function loadMatchSchedule(matchIndex) {
+        if (state.matches[matchIndex]) {
+          state.periods = state.matches[matchIndex].periods.map(p => ({ ...p }));
+          saveState();
+          renderSchedule();
+        }
+      }
+
+      function deleteMatch(matchIndex) {
+        if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
+          state.matches.splice(matchIndex, 1);
+          saveState();
+          renderMatches();
+        }
+      }
+
+      function saveMatch() {
+        const date = matchDateInput.value;
+        const opponent = matchOpponentInput.value.trim();
+
+        if (!date || !opponent) {
+          alert("Vul alstublieft een datum en tegenstander in.");
+          return;
+        }
+
+        state.matches.push({
+          date: date,
+          opponent: opponent,
+          periods: state.periods.map(p => ({ ...p, selected: [...p.selected] }))
+        });
+
+        saveState();
+        renderMatches();
+        matchDateInput.value = "";
+        matchOpponentInput.value = "";
+      }
+
       function combinations(arr, size) {
         if (!size) return [[]];
         if (!arr.length) return [];
@@ -482,48 +652,98 @@
         return score;
       }
 
-      function generatePeriodSelection() {
+      function generateBalancedRotation() {
         const present = getPresentPlayers();
-        if (present.length === 0) return Array(5).fill(null);
-
-        let bestCombo = null;
-        let bestScore = Number.POSITIVE_INFINITY;
-
-        for (let size = 1; size <= Math.min(5, present.length); size++) {
-          const candidateCombos = combinations(present, size);
-          candidateCombos.forEach((combo) => {
-            const counts = { dribbler: 0, inbounder: 0, runner: 0 };
-            combo.forEach((player) => {
-              if (player.roles.dribbler) counts.dribbler += 1;
-              if (player.roles.inbounder) counts.inbounder += 1;
-              if (player.roles.runner) counts.runner += 1;
-            });
-
-            const specialCount = combo.filter((player) => specialIds.includes(player.id)).length;
-            const valid = counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && specialCount <= 2;
-            const score = scoreCombo(combo);
-
-            if (valid || score < bestScore) {
-              if (valid) {
-                bestCombo = combo;
-                bestScore = -1;
-                return;
-              }
-              bestCombo = combo;
-              bestScore = score;
-            }
-          });
-
-          if (bestScore === -1) break;
+        if (present.length < 5) {
+          alert("Niet genoeg spelers aanwezig (minimaal 5 nodig).");
+          return;
         }
 
-        const selected = bestCombo ? bestCombo.map((player) => player.id) : [];
-        while (selected.length < 5) selected.push(null);
-        return selected.slice(0, 5);
+        const playerRotationCount = {};
+        present.forEach(p => playerRotationCount[p.id] = 0);
+
+        const periodRotations = Array(periodCount).fill(null).map(() => []);
+
+        // Multi-pass algorithm to balance rotations
+        for (let pass = 0; pass < 3; pass++) {
+          for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
+            if (periodRotations[periodIdx].length >= 5) continue;
+
+            const specialInPeriod = periodRotations[periodIdx].filter(id => specialIds.includes(id)).length;
+            const needMore = 5 - periodRotations[periodIdx].length;
+
+            const candidates = present.filter(p => 
+              !periodRotations[periodIdx].includes(p.id) &&
+              !(specialIds.includes(p.id) && specialInPeriod >= 2)
+            ).sort((a, b) => playerRotationCount[a.id] - playerRotationCount[b.id]);
+
+            for (let i = 0; i < Math.min(needMore, candidates.length); i++) {
+              const player = candidates[i];
+              periodRotations[periodIdx].push(player.id);
+              playerRotationCount[player.id]++;
+            }
+          }
+        }
+
+        // Fill remaining slots with the least rotated players
+        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
+          while (periodRotations[periodIdx].length < 5) {
+            const specialInPeriod = periodRotations[periodIdx].filter(id => specialIds.includes(id)).length;
+            const remaining = present.filter(p => 
+              !periodRotations[periodIdx].includes(p.id) &&
+              !(specialIds.includes(p.id) && specialInPeriod >= 2)
+            );
+
+            if (remaining.length === 0) break;
+
+            const leastRotated = remaining.reduce((a, b) => 
+              playerRotationCount[a.id] < playerRotationCount[b.id] ? a : b
+            );
+            periodRotations[periodIdx].push(leastRotated.id);
+            playerRotationCount[leastRotated.id]++;
+          }
+        }
+
+        // Pad with nulls
+        periodRotations.forEach(rotation => {
+          while (rotation.length < 5) rotation.push(null);
+        });
+
+        // Try to optimize for role requirements
+        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
+          const playerIds = periodRotations[periodIdx].filter(id => id !== null);
+          const players = playerIds.map(id => playerById(id));
+          const combo = players;
+
+          // Check if this combo is valid
+          const counts = getCounts({ selected: periodRotations[periodIdx] });
+          if (counts.dribbler !== 2 || counts.inbounder !== 1 || counts.runner !== 2) {
+            // Try to swap a player to get the right counts
+            const needMore = 5 - playerIds.length;
+            if (needMore > 0) {
+              const missing = present.filter(p => !periodRotations[periodIdx].includes(p.id));
+              if (missing.length > 0) {
+                const replacement = missing[0];
+                const slotToReplace = periodRotations[periodIdx].findIndex(id => id === null);
+                if (slotToReplace >= 0) {
+                  periodRotations[periodIdx][slotToReplace] = replacement.id;
+                }
+              }
+            }
+          }
+        }
+
+        return periodRotations;
       }
 
       function generateAllPeriods() {
-        state.periods = state.periods.map((period) => ({ ...period, selected: generatePeriodSelection() }));
+        const rotations = generateBalancedRotation();
+        if (!rotations) return;
+
+        state.periods.forEach((period, idx) => {
+          period.selected = rotations[idx] || Array(5).fill(null);
+        });
+
         saveState();
         renderSchedule();
       }
@@ -534,6 +754,7 @@
         const fresh = getDefaultState();
         state.players = fresh.players;
         state.periods = fresh.periods;
+        state.matches = fresh.matches;
         saveState();
         render();
       }
@@ -541,11 +762,13 @@
       function render() {
         renderPlayers();
         renderSchedule();
+        renderMatches();
       }
 
       document.getElementById("generateBtn").addEventListener("click", generateAllPeriods);
       document.getElementById("resetBtn").addEventListener("click", resetState);
       document.getElementById("printBtn").addEventListener("click", () => window.print());
+      addMatchBtn.addEventListener("click", saveMatch);
 
       document.addEventListener("change", (event) => {
         if (event.target.matches(".present-toggle")) {
