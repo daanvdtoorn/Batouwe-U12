@@ -716,6 +716,22 @@
         return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
       }
 
+      function scoreFairCombo(combo, usage, presentPlayers) {
+        const target = (periodCount * 5) / presentPlayers.length;
+        const repeatedPenalty = combo.reduce((total, player) => total + usage[player.id] * 70, 0);
+        const fairnessPenalty = combo.reduce((total, player) => {
+          const projected = usage[player.id] + 1;
+          return total + Math.abs(projected - target) * 35;
+        }, 0);
+
+        const specialPenalty = combo.filter((player) => specialIds.includes(player.id)).length * 20;
+        const overUsePenalty = combo.reduce((total, player) => {
+          return total + Math.max(0, usage[player.id] - Math.ceil(target)) * 200;
+        }, 0);
+
+        return repeatedPenalty + fairnessPenalty + specialPenalty + overUsePenalty;
+      }
+
       function generateBalancedRotation() {
         const present = getPresentPlayers();
         if (present.length < 5) {
@@ -730,8 +746,6 @@
         }
 
         const usage = Object.fromEntries(present.map((player) => [player.id, 0]));
-        const usedComboKeys = new Set();
-        const targetPerPlayer = (periodCount * 5) / present.length;
         const selectedPeriods = [];
 
         for (let periodIndex = 0; periodIndex < periodCount; periodIndex++) {
@@ -739,22 +753,14 @@
           let bestScore = Number.POSITIVE_INFINITY;
 
           for (const combo of validCombos) {
-            const comboIds = combo.map((player) => player.id).sort();
-            const comboKey = comboIds.join("|");
-            const repeatPenalty = usedComboKeys.has(comboKey) ? 1200 : 0;
-            const fairnessPenalty = combo.reduce((total, player) => {
-              const nextUsage = usage[player.id] + 1;
-              return total + Math.pow(nextUsage - targetPerPlayer, 2) * 30;
-            }, 0);
-            const specialPenalty = combo.reduce((total, player) => {
-              if (specialIds.includes(player.id)) return total + usage[player.id] * 18;
-              return total;
-            }, 0);
-            const overusePenalty = combo.reduce((total, player) => {
-              return total + Math.max(0, usage[player.id] - Math.ceil(targetPerPlayer)) * 200;
-            }, 0);
-            const previousUsagePenalty = combo.reduce((total, player) => total + usage[player.id] * 12, 0);
-            const score = repeatPenalty + fairnessPenalty + specialPenalty + overusePenalty + previousUsagePenalty;
+            const comboKey = combo.map((player) => player.id).sort().join("|");
+
+            const alreadySelected = selectedPeriods.some((period) => {
+              const ids = period.slice().sort().join("|");
+              return ids === comboKey;
+            });
+
+            const score = scoreFairCombo(combo, usage, present) + (alreadySelected ? 4000 : 0);
 
             if (score < bestScore) {
               bestScore = score;
@@ -763,15 +769,14 @@
           }
 
           if (!bestCombo) {
-            alert("Kon geen evenwichtige verdeling maken voor alle periodes.");
+            alert("Kon geen eerlijk schema maken voor alle periodes.");
             return null;
           }
 
-          usedComboKeys.add(bestCombo.map((player) => player.id).sort().join("|"));
+          selectedPeriods.push(bestCombo.map((player) => player.id));
           bestCombo.forEach((player) => {
             usage[player.id] += 1;
           });
-          selectedPeriods.push(bestCombo.map((player) => player.id));
         }
 
         return selectedPeriods.map((period) => {
