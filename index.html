@@ -6,18 +6,21 @@
     <title>Basketbal Rotatie Schema</title>
     <style>
       :root {
-        --bg: #f2f2f2;
-        --panel: rgba(255,255,255,0.9);
+        --bg: #111827;
+        --panel: #1f2937;
+        --panel-2: #0f172a;
+        --tile: #e5e7eb;
+        --line: rgba(255,255,255,0.1);
+        --text: #f3f4f6;
+        --muted: #cbd5e1;
         --red: #b7191f;
         --red-dark: #8b1117;
-        --ink: #1f1f1f;
-        --muted: #666;
-        --line: #d7d7d7;
-        --dribbler: #b7191f;
-        --inbounder: #a0a0a0;
-        --runner: #7e1f1f;
-        --ok: #2d8a3f;
-        --warn: #d48300;
+        --dribbler: #f59e0b;
+        --inbounder: #3b82f6;
+        --runner: #10b981;
+        --multi: #8b5cf6;
+        --ok: #34d399;
+        --warn: #fbbf24;
       }
 
       * { box-sizing: border-box; }
@@ -26,20 +29,17 @@
         margin: 0;
         font-family: Arial, Helvetica, sans-serif;
         background: var(--bg);
-        color: var(--ink);
+        color: var(--text);
       }
 
       body {
         min-height: 100vh;
-        background:
-          linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72)),
-          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Cg opacity='0.16'%3E%3Cpath d='M0 0H1200V800H0Z' fill='%23f1f1f1'/%3E%3Ccircle cx='200' cy='100' r='80' fill='none' stroke='%23999' stroke-width='1'/%3E%3Ccircle cx='600' cy='400' r='120' fill='none' stroke='%23999' stroke-width='1'/%3E%3Ccircle cx='1000' cy='200' r='100' fill='none' stroke='%23999' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E");
+        padding: 18px;
       }
 
       .page-shell {
-        max-width: 1500px;
-        margin: 24px auto;
-        padding: 18px;
+        max-width: 1400px;
+        margin: 0 auto;
       }
 
       .topbar {
@@ -47,10 +47,9 @@
         justify-content: space-between;
         align-items: center;
         gap: 16px;
-        background: rgba(255,255,255,0.82);
-        border: 1px solid rgba(0,0,0,0.08);
+        background: rgba(17,24,39,0.9);
+        border: 1px solid var(--line);
         border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         padding: 18px 20px;
         margin-bottom: 20px;
       }
@@ -58,9 +57,7 @@
       h1 {
         margin: 0;
         font-size: clamp(1.8rem, 2vw, 2.8rem);
-        font-weight: 700;
-        letter-spacing: 0.03em;
-        color: var(--red-dark);
+        color: #f8fafc;
       }
 
       .actions {
@@ -72,7 +69,7 @@
       button {
         border: none;
         border-radius: 10px;
-        padding: 11px 16px;
+        padding: 10px 14px;
         font-weight: 700;
         cursor: pointer;
       }
@@ -83,88 +80,15 @@
       }
 
       .secondary {
-        background: #efefef;
-        color: var(--ink);
-        border: 1px solid var(--line);
+        background: #374151;
+        color: var(--text);
       }
 
-      .match-panel, .players-panel, .schedule-panel {
-        background: var(--panel);
-        border: 1px solid rgba(0,0,0,0.08);
+      .players-panel, .schedule-panel, .match-panel {
+        background: rgba(31,41,55,0.9);
+        border: 1px solid var(--line);
         border-radius: 18px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      }
-
-      .match-panel {
         padding: 16px;
-        margin-bottom: 22px;
-      }
-
-      .match-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 16px;
-        margin-bottom: 20px;
-      }
-
-      .match-form {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 12px;
-        align-items: flex-end;
-        margin-bottom: 20px;
-      }
-
-      .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .form-group label {
-        font-size: 0.85rem;
-        color: var(--muted);
-        font-weight: 600;
-      }
-
-      .match-card {
-        background: rgba(255,255,255,0.9);
-        border: 1px solid var(--line);
-        border-left: 6px solid var(--red);
-        border-radius: 12px;
-        padding: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .match-info {
-        flex: 1;
-      }
-
-      .match-info h3 {
-        margin: 0 0 4px 0;
-        font-size: 1rem;
-      }
-
-      .match-info p {
-        margin: 2px 0;
-        font-size: 0.85rem;
-        color: var(--muted);
-      }
-
-      .match-actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .match-actions button {
-        padding: 6px 12px;
-        font-size: 0.85rem;
-      }
-
-      .players-panel {
-        padding: 14px;
         margin-bottom: 22px;
       }
 
@@ -172,71 +96,41 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
       }
 
       .panel-header h2 {
         margin: 0;
         font-size: 1.1rem;
-        color: var(--red-dark);
+        color: white;
       }
 
       .summary-pill {
-        background: #fff;
+        background: rgba(255,255,255,0.04);
         border: 1px solid var(--line);
         border-radius: 999px;
         padding: 7px 12px;
-        font-size: 0.9rem;
         color: var(--muted);
+        font-size: 0.85rem;
       }
 
-      .rotation-summary {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .stat-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        background: rgba(183, 25, 31, 0.08);
-        border: 1px solid rgba(183, 25, 31, 0.2);
-        border-radius: 999px;
-        padding: 7px 10px;
-        font-size: 0.82rem;
-        color: var(--ink);
-      }
-
-      .stat-pill .name {
-        font-weight: 700;
-      }
-
-      .stat-pill .count {
-        background: var(--red);
-        color: white;
-        border-radius: 999px;
-        min-width: 42px;
-        text-align: center;
-        padding: 4px 8px;
-        font-size: 0.72rem;
+      .players-layout {
+        display: grid;
+        grid-template-columns: 420px 1fr;
+        gap: 24px;
       }
 
       table {
         width: 100%;
         border-collapse: collapse;
-        background: rgba(255,255,255,0.72);
       }
 
       thead th {
-        background: var(--red);
-        color: white;
+        background: rgba(255,255,255,0.04);
+        color: var(--muted);
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
         text-align: center;
-        padding: 12px 10px;
-        border-right: 1px solid rgba(255,255,255,0.15);
       }
 
       thead th:nth-child(2) {
@@ -244,14 +138,9 @@
       }
 
       tbody td {
-        padding: 10px 8px;
-        border-bottom: 1px solid var(--line);
+        padding: 8px 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
         text-align: center;
-        background: rgba(255,255,255,0.18);
-      }
-
-      tbody tr:nth-child(even) td {
-        background: rgba(0,0,0,0.02);
       }
 
       tbody td:nth-child(2) {
@@ -260,22 +149,47 @@
 
       input[type="text"], input[type="number"], input[type="date"], select {
         width: 100%;
+        background: #0f172a;
+        color: white;
         border: 1px solid var(--line);
         border-radius: 8px;
         padding: 8px 10px;
         font: inherit;
-        background: white;
-        color: var(--ink);
       }
 
       input[type="checkbox"] {
+        accent-color: var(--red);
         width: 18px;
         height: 18px;
-        accent-color: var(--red);
       }
 
-      .schedule-panel {
-        padding: 16px;
+      .rotation-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 10px;
+        color: var(--text);
+        font-size: 0.82rem;
+      }
+
+      .stat-pill .count {
+        min-width: 36px;
+        text-align: center;
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: var(--red);
+        color: white;
+        font-weight: bold;
       }
 
       .schedule-grid {
@@ -285,15 +199,14 @@
       }
 
       .period-card {
-        background: rgba(255,255,255,0.9);
+        background: rgba(15, 23, 42, 0.9);
         border: 1px solid var(--line);
-        border-left: 6px solid var(--red);
         border-radius: 12px;
         padding: 12px;
       }
 
       .period-card.invalid {
-        border-left-color: var(--warn);
+        border-color: rgba(251, 191, 36, 0.8);
       }
 
       .period-head {
@@ -305,7 +218,38 @@
 
       .period-head h3 {
         margin: 0;
-        font-size: 1.05rem;
+        font-size: 1rem;
+      }
+
+      .slot-row {
+        display: grid;
+        grid-template-columns: 1fr 38px;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .slot-row select {
+        background: rgba(255,255,255,0.04);
+        color: white;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+      }
+
+      .slot-toggle {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        color: white;
+        font-size: 1rem;
+        padding: 0;
+        width: 38px;
+        height: 38px;
+      }
+
+      .slot-toggle.active {
+        background: var(--red);
+        border-color: var(--red);
       }
 
       .badge-row {
@@ -330,28 +274,15 @@
       .role-badge.dribbler { background: var(--dribbler); }
       .role-badge.inbounder { background: var(--inbounder); }
       .role-badge.runner { background: var(--runner); }
-
-      .slot {
-        margin-bottom: 10px;
-      }
-
-      .slot label {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 0.7rem;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-      }
+      .role-badge.multi { background: var(--multi); }
+      .role-badge.neutral { background: #6b7280; }
 
       .status {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        margin-top: 10px;
-        border-top: 1px solid var(--line);
-        padding-top: 8px;
         font-size: 0.8rem;
         color: var(--muted);
       }
@@ -359,24 +290,80 @@
       .status.ok { color: var(--ok); }
       .status.warn { color: var(--warn); }
 
-      @media (max-width: 700px) {
-        .topbar { flex-direction: column; align-items: flex-start; }
-        .actions { width: 100%; }
-        .actions button { flex: 1 1 140px; }
-        .match-form { grid-template-columns: 1fr; }
+      .match-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        align-items: end;
+        margin-bottom: 18px;
       }
 
-      @media print {
-        body { background: white; }
-        .topbar, .actions, .status, .match-panel, .players-panel { display: none !important; }
-        .page-shell { margin: 0; max-width: none; padding: 0; }
-        .schedule-panel {
-          box-shadow: none;
-          border: none;
-          background: white;
-          break-inside: avoid;
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .form-group label {
+        font-size: 0.84rem;
+        color: var(--muted);
+      }
+
+      .match-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+      }
+
+      .match-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--red);
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .match-info h3 {
+        margin: 0 0 4px;
+      }
+
+      .match-info p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .match-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .match-actions button {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 900px) {
+        .players-layout {
+          grid-template-columns: 1fr;
         }
-        .period-card { break-inside: avoid; }
+      }
+
+      @media (max-width: 700px) {
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .actions {
+          width: 100%;
+        }
+        .actions button {
+          flex: 1 1 140px;
+        }
       }
     </style>
   </head>
@@ -385,7 +372,7 @@
       <header class="topbar">
         <h1>Basketbal Rotatie Schema</h1>
         <div class="actions">
-          <button class="primary" id="generateBtn">Genereer schema</button>
+          <button class="primary" id="generateBtn">Genereer</button>
           <button class="secondary" id="resetBtn">Reset</button>
           <button class="secondary" id="printBtn">Print</button>
         </div>
@@ -405,7 +392,7 @@
             <label>Tegenstander</label>
             <input type="text" id="matchOpponent" placeholder="Tegenstander" />
           </div>
-          <button class="primary" id="addMatchBtn">Wedstrijd toevoegen</button>
+          <button class="primary" id="addMatchBtn">Toevoegen</button>
         </div>
 
         <div class="match-grid" id="matchGrid"></div>
@@ -417,21 +404,27 @@
           <div class="summary-pill" id="presenceSummary">0 spelers aanwezig</div>
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Speelt</th>
-              <th>Naam</th>
-              <th>Rugnummer</th>
-              <th>Dribbler</th>
-              <th>Inbounder</th>
-              <th>Runner</th>
-            </tr>
-          </thead>
-          <tbody id="playersBody"></tbody>
-        </table>
+        <div class="players-layout">
+          <div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Speelt</th>
+                  <th>Naam</th>
+                  <th>Nr.</th>
+                  <th>D</th>
+                  <th>I</th>
+                  <th>R</th>
+                </tr>
+              </thead>
+              <tbody id="playersBody"></tbody>
+            </table>
+          </div>
 
-        <div class="rotation-summary" id="rotationSummary"></div>
+          <div>
+            <div class="rotation-summary" id="rotationSummary"></div>
+          </div>
+        </div>
       </section>
 
       <section class="schedule-panel">
@@ -444,24 +437,23 @@
 
     <script>
       const basePlayers = [
-        { id: "sander", name: "Sander Wolf", number: 27, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
-        { id: "duuk", name: "Duuk van den Anker", number: 13, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
-        { id: "nouf", name: "Nouf Faber", number: 22, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
-        { id: "vuk", name: "Vuk Jankovic", number: 55, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
-        { id: "lucas", name: "Lucas Fu", number: 11, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
-        { id: "noah", name: "Noah van den Toorn", number: 30, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
-        { id: "joris", name: "Joris Mepsehen", number: 15, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
-        { id: "tanne", name: "Tanne Du Bois", number: 16, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
-        { id: "lieuwe", name: "Lieuwe Berentsen", number: 20, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
-        { id: "tygo", name: "Tygo Janssen", number: 14, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
-        { id: "guus", name: "Guus Berendsen", number: 10, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
-        { id: "niels", name: "Niels Engelenburg", number: 41, present: true, roles: { dribbler: false, inbounder: false, runner: true } }
+        { id: "guus", name: "Guus", number: 10, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
+        { id: "tanne", name: "Tanne", number: 16, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "noah", name: "Noah", number: 30, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "vuk", name: "Vuk", number: 55, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "sander", name: "Sander", number: 27, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
+        { id: "duuk", name: "Duuk", number: 13, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
+        { id: "tygo", name: "Tygo", number: 14, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "noud", name: "Noud", number: 1, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "joris", name: "Joris", number: 15, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "lucas", name: "Lucas", number: 11, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
+        { id: "lieuwe", name: "Lieuwe", number: 20, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "nouf", name: "Nouf", number: 22, present: true, roles: { dribbler: false, inbounder: false, runner: true } }
       ];
 
       const specialIds = ["guus", "lucas", "sander", "niels"];
       const periodCount = 8;
       const playersPerPeriod = 5;
-      const totalSlots = periodCount * playersPerPeriod;
 
       function getDefaultState() {
         return {
@@ -486,9 +478,7 @@
               }))
             : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(playersPerPeriod).fill(null) }));
 
-          const matches = Array.isArray(saved.matches) ? saved.matches : [];
-
-          return { players, periods, matches };
+          return { players, periods, matches: Array.isArray(saved.matches) ? saved.matches : [] };
         } catch {
           return getDefaultState();
         }
@@ -498,11 +488,9 @@
       const playersBody = document.getElementById("playersBody");
       const scheduleGrid = document.getElementById("scheduleGrid");
       const presenceSummary = document.getElementById("presenceSummary");
+      const rotationSummary = document.getElementById("rotationSummary");
       const matchGrid = document.getElementById("matchGrid");
       const addMatchBtn = document.getElementById("addMatchBtn");
-      const matchDateInput = document.getElementById("matchDate");
-      const matchOpponentInput = document.getElementById("matchOpponent");
-      const rotationSummary = document.getElementById("rotationSummary");
 
       function saveState() {
         localStorage.setItem("basketballRotationState", JSON.stringify(state));
@@ -521,6 +509,20 @@
         return state.players.find((player) => player.id === playerId);
       }
 
+      function getRoleBadge(playerId, periodId) {
+        const player = playerById(playerId);
+        if (!player) return "neutral";
+        const p = player.roles;
+        if (p.dribbler && p.inbounder && p.runner) return "multi";
+        if (p.dribbler && p.inbounder) return "multi";
+        if (p.dribbler && p.runner) return "multi";
+        if (p.inbounder && p.runner) return "multi";
+        if (p.dribbler) return "dribbler";
+        if (p.inbounder) return "inbounder";
+        if (p.runner) return "runner";
+        return "neutral";
+      }
+
       function renderPlayers() {
         playersBody.innerHTML = state.players.map((player) => `
           <tr data-player-id="${player.id}">
@@ -537,30 +539,19 @@
       }
 
       function getPlayerRotationCount(playerId) {
-        return state.periods.reduce((count, period) => {
-          return count + (period.selected.includes(playerId) ? 1 : 0);
-        }, 0);
+        return state.periods.reduce((count, period) => count + (period.selected.includes(playerId) ? 1 : 0), 0);
       }
 
       function renderRotationSummary() {
-        const presentPlayers = getPresentPlayers().slice().sort((a, b) => {
-          const diff = getPlayerRotationCount(a.id) - getPlayerRotationCount(b.id);
-          return diff !== 0 ? diff : a.name.localeCompare(b.name);
-        });
-
-        if (!presentPlayers.length) {
-          rotationSummary.innerHTML = "<div class=\"stat-pill\"><span class=\"name\">Geen spelers aanwezig</span></div>";
-          return;
-        }
-
-        const targetRounds = presentPlayers.length > 0 ? totalSlots / presentPlayers.length : 0;
+        const presentPlayers = getPresentPlayers();
+        const target = Math.round((periodCount * playersPerPeriod) / presentPlayers.length);
 
         rotationSummary.innerHTML = presentPlayers.map((player) => {
           const count = getPlayerRotationCount(player.id);
           return `
             <div class="stat-pill">
-              <span class="name">${player.name}</span>
-              <span class="count">${count}/${Math.round(targetRounds)}</span>
+              <span>${player.name}</span>
+              <span class="count">${count}/${target}</span>
             </div>
           `;
         }).join("");
@@ -579,27 +570,33 @@
 
       function isValidPeriod(period) {
         const counts = getCounts(period);
-        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.total === playersPerPeriod && counts.special <= 2;
+        return counts.total === 5 && counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
       }
 
       function renderSchedule() {
         scheduleGrid.innerHTML = state.periods.map((period, index) => {
           const counts = getCounts(period);
           const valid = isValidPeriod(period);
+
           const slots = Array.from({ length: playersPerPeriod }, (_, slotIndex) => {
-            const playerId = period.selected[slotIndex];
-            const options = [
-              '<option value="">Leeg</option>',
-              ...getPresentPlayers().map((player) => `<option value="${player.id}" ${player.id === playerId ? "selected" : ""}>${player.name} (${player.number})</option>`)
-            ].join("");
+            const selectedId = period.selected[slotIndex];
+            const player = playerById(selectedId);
+            const badge = player ? getRoleBadge(selectedId, period.id) : "neutral";
 
             return `
-              <div class="slot">
-                <label>Speler ${slotIndex + 1}</label>
-                <select data-period-id="${period.id}" data-slot-index="${slotIndex}" class="period-player-select">
-                  ${options}
+              <div class="slot-row">
+                <select data-period-id="${period.id}" data-slot-index="${slotIndex}" class="slot-select">
+                  <option value="">Leeg</option>
+                  ${getPresentPlayers().map((p) => `
+                    <option value="${p.id}" ${p.id === selectedId ? "selected" : ""}>${p.name}</option>
+                  `).join("")}
                 </select>
+
+                <button class="slot-toggle ${selectedId ? "active" : ""}" data-period-id="${period.id}" data-slot-index="${slotIndex}" data-player-id="${selectedId || ""}" title="${selectedId ? "Verwijderen" : "Toevoegen"}">
+                  ${selectedId ? "✓" : "+"}
+                </button>
               </div>
+              ${player ? `<div class="badge-row"><span class="role-badge ${badge}">${badge === "dribbler" ? "D" : badge === "inbounder" ? "I" : badge === "runner" ? "R" : badge === "multi" ? "M" : "N"}</span></div>` : ""}
             `;
           }).join("");
 
@@ -607,7 +604,7 @@
             <article class="period-card ${valid ? "" : "invalid"}">
               <div class="period-head">
                 <h3>Periode ${index + 1}</h3>
-                <span class="role-badge ${counts.total ? "dribbler" : "inbounder"}">${counts.total}/${playersPerPeriod}</span>
+                <span class="role-badge dribbler">${counts.total}/5</span>
               </div>
               ${slots}
               <div class="badge-row">
@@ -617,26 +614,43 @@
               </div>
               <div class="status ${valid ? "ok" : "warn"}">
                 <span>status</span>
-                <strong>${valid ? "OK" : "WAARSCHUWING"}</strong>
+                <strong>${valid ? "OK" : "WAAR"}</strong>
               </div>
             </article>
           `;
         }).join("");
+
+        document.querySelectorAll(".slot-toggle").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const periodId = Number(btn.dataset.periodId);
+            const slotIndex = Number(btn.dataset.slotIndex);
+            const period = state.periods.find((p) => p.id === periodId);
+            if (!period) return;
+
+            if (btn.dataset.playerId) {
+              period.selected[slotIndex] = null;
+            }
+
+            saveState();
+            renderSchedule();
+            renderRotationSummary();
+          });
+        });
       }
 
       function renderMatches() {
         matchGrid.innerHTML = state.matches.map((match, index) => {
           const date = new Date(match.date);
-          const dateStr = date.toLocaleDateString("nl-NL", { weekday: "short", year: "numeric", month: "short", day: "numeric" });
+          const label = isNaN(date.getTime()) ? match.date : date.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
           return `
             <div class="match-card">
               <div class="match-info">
                 <h3>${match.opponent}</h3>
-                <p>${dateStr}</p>
+                <p>${label}</p>
               </div>
               <div class="match-actions">
-                <button class="secondary" data-index="${index}" id="loadMatchBtn">Schema laden</button>
-                <button class="secondary" data-index="${index}" id="deleteMatchBtn">Verwijderen</button>
+                <button class="secondary" data-index="${index}" id="loadMatchBtn">Laad</button>
+                <button class="secondary" data-index="${index}" id="deleteMatchBtn">X</button>
               </div>
             </div>
           `;
@@ -644,42 +658,31 @@
 
         document.querySelectorAll("#loadMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index, 10);
-            loadMatchSchedule(index);
+            const index = Number(e.target.dataset.index);
+            const match = state.matches[index];
+            if (!match) return;
+            state.periods = match.periods.map((p) => ({ ...p, selected: [...p.selected] }));
+            saveState();
+            renderSchedule();
           });
         });
 
         document.querySelectorAll("#deleteMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index, 10);
-            deleteMatch(index);
+            const index = Number(e.target.dataset.index);
+            state.matches.splice(index, 1);
+            saveState();
+            renderMatches();
           });
         });
       }
 
-      function loadMatchSchedule(matchIndex) {
-        if (state.matches[matchIndex]) {
-          state.periods = state.matches[matchIndex].periods.map((p) => ({ ...p }));
-          saveState();
-          renderSchedule();
-          renderRotationSummary();
-        }
-      }
-
-      function deleteMatch(matchIndex) {
-        if (confirm("Weet je zeker dat je deze wedstrijd wilt verwijderen?")) {
-          state.matches.splice(matchIndex, 1);
-          saveState();
-          renderMatches();
-        }
-      }
-
-      function saveMatch() {
-        const date = matchDateInput.value;
-        const opponent = matchOpponentInput.value.trim();
+      function addMatch() {
+        const date = document.getElementById("matchDate").value;
+        const opponent = document.getElementById("matchOpponent").value.trim();
 
         if (!date || !opponent) {
-          alert("Vul alstublieft een datum en tegenstander in.");
+          alert("Vul datum en tegenstander in.");
           return;
         }
 
@@ -691,8 +694,8 @@
 
         saveState();
         renderMatches();
-        matchDateInput.value = "";
-        matchOpponentInput.value = "";
+        document.getElementById("matchDate").value = "";
+        document.getElementById("matchOpponent").value = "";
       }
 
       function combinations(arr, size) {
@@ -718,74 +721,63 @@
       function generateFairRotation() {
         const present = getPresentPlayers();
         if (present.length < playersPerPeriod) {
-          alert(`Niet genoeg spelers aanwezig (minimaal ${playersPerPeriod} nodig).`);
+          alert(`Niet genoeg spelers aanwezig (${playersPerPeriod} nodig).`);
           return null;
         }
 
         const validCombos = combinations(present, playersPerPeriod).filter(isValidCombo);
         if (!validCombos.length) {
-          alert("Er is geen geldige combinatie mogelijk met de huidige rollen en regels.");
+          alert("Geen geldige combinatie gevonden met de huidige rollen.");
           return null;
         }
 
-        const targetPerPlayer = totalSlots / present.length;
+        const targetPerPlayer = (periodCount * playersPerPeriod) / present.length;
         const usage = Object.fromEntries(present.map((p) => [p.id, 0]));
-        const selectedPeriods = [];
+        const selected = [];
 
-        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
-          let bestCombo = null;
+        for (let i = 0; i < periodCount; i++) {
+          let best = null;
           let bestScore = Number.POSITIVE_INFINITY;
 
-          for (const combo of validCombos) {
+          validCombos.forEach((combo) => {
             const comboKey = combo.map((p) => p.id).sort().join("|");
-            const alreadyUsed = selectedPeriods.some((s) => s.sort().join("|") === comboKey);
+            const alreadyUsed = selected.some((periodCombo) => periodCombo.sort().join("|") === comboKey);
 
             let score = 0;
-
-            // Fairness: prioritize players who are below target
-            score += combo.reduce((total, p) => {
-              const deficit = targetPerPlayer - usage[p.id];
-              return total + (deficit > 0 ? -deficit * 100 : Math.abs(deficit) * 200);
-            }, 0);
-
-            // Penalty for reusing exact combo
-            score += alreadyUsed ? 5000 : 0;
+            combo.forEach((player) => {
+              const deficit = targetPerPlayer - usage[player.id];
+              score += deficit > 0 ? -deficit * 100 : Math.abs(deficit) * 200;
+            });
+            if (alreadyUsed) score += 9999;
 
             if (score < bestScore) {
               bestScore = score;
-              bestCombo = combo;
+              best = combo;
             }
-          }
-
-          if (!bestCombo) {
-            alert("Kon geen eerlijk schema genereren.");
-            return null;
-          }
-
-          selectedPeriods.push(bestCombo.map((p) => p.id));
-          bestCombo.forEach((p) => {
-            usage[p.id] += 1;
           });
+
+          if (!best) return null;
+          selected.push(best.map((p) => p.id));
+          best.forEach((player) => usage[player.id] += 1);
         }
 
-        return selectedPeriods;
+        return selected;
       }
 
       function generateAllPeriods() {
-        const rotations = generateFairRotation();
-        if (!rotations) return;
-
-        state.periods.forEach((period, idx) => {
-          period.selected = rotations[idx] || Array(playersPerPeriod).fill(null);
-        });
-
+        const generated = generateFairRotation();
+        if (!generated) return;
+        state.periods = generated.map((ids, index) => ({
+          id: index + 1,
+          selected: ids
+        }));
         saveState();
         renderSchedule();
         renderRotationSummary();
       }
 
       function resetState() {
-        const ok = window.confirm("Weet je zeker dat je het schema wilt resetten?");
+        const ok = window.confirm("Reset alles?");
         if (!ok) return;
         const fresh = getDefaultState();
         state.players = fresh.players;
@@ -805,7 +797,7 @@
       document.getElementById("generateBtn").addEventListener("click", generateAllPeriods);
       document.getElementById("resetBtn").addEventListener("click", resetState);
       document.getElementById("printBtn").addEventListener("click", () => window.print());
-      addMatchBtn.addEventListener("click", saveMatch);
+      addMatchBtn.addEventListener("click", addMatch);
 
       document.addEventListener("change", (event) => {
         if (event.target.matches(".present-toggle")) {
@@ -847,10 +839,10 @@
           return;
         }
 
-        if (event.target.matches(".period-player-select")) {
+        if (event.target.matches(".slot-select")) {
           const periodId = Number(event.target.dataset.periodId);
           const slotIndex = Number(event.target.dataset.slotIndex);
-          const period = state.periods.find((item) => item.id === periodId);
+          const period = state.periods.find((p) => p.id === periodId);
           if (!period) return;
           period.selected[slotIndex] = event.target.value || null;
           saveState();
