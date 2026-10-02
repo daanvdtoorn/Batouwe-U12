@@ -191,6 +191,40 @@
         color: var(--muted);
       }
 
+      .rotation-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(183, 25, 31, 0.08);
+        border: 1px solid rgba(183, 25, 31, 0.2);
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.82rem;
+        color: var(--ink);
+      }
+
+      .stat-pill .name {
+        font-weight: 700;
+      }
+
+      .stat-pill .count {
+        background: var(--red);
+        color: white;
+        border-radius: 999px;
+        min-width: 42px;
+        text-align: center;
+        padding: 4px 8px;
+        font-size: 0.72rem;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
@@ -396,6 +430,8 @@
           </thead>
           <tbody id="playersBody"></tbody>
         </table>
+
+        <div class="rotation-summary" id="rotationSummary"></div>
       </section>
 
       <section class="schedule-panel">
@@ -464,6 +500,7 @@
       const addMatchBtn = document.getElementById("addMatchBtn");
       const matchDateInput = document.getElementById("matchDate");
       const matchOpponentInput = document.getElementById("matchOpponent");
+      const rotationSummary = document.getElementById("rotationSummary");
 
       function saveState() {
         localStorage.setItem("basketballRotationState", JSON.stringify(state));
@@ -495,6 +532,34 @@
         `).join("");
 
         updatePresenceSummary();
+      }
+
+      function getPlayerRotationCount(playerId) {
+        return state.periods.reduce((count, period) => {
+          return count + (period.selected.includes(playerId) ? 1 : 0);
+        }, 0);
+      }
+
+      function renderRotationSummary() {
+        const presentPlayers = getPresentPlayers().slice().sort((a, b) => {
+          const diff = getPlayerRotationCount(a.id) - getPlayerRotationCount(b.id);
+          return diff !== 0 ? diff : a.name.localeCompare(b.name);
+        });
+
+        if (!presentPlayers.length) {
+          rotationSummary.innerHTML = "<div class=\"stat-pill\"><span class=\"name\">Geen spelers aanwezig</span></div>";
+          return;
+        }
+
+        rotationSummary.innerHTML = presentPlayers.map((player) => {
+          const count = getPlayerRotationCount(player.id);
+          return `
+            <div class="stat-pill">
+              <span class="name">${player.name}</span>
+              <span class="count">${count}/${periodCount}</span>
+            </div>
+          `;
+        }).join("");
       }
 
       function getCounts(period) {
@@ -593,6 +658,7 @@
           state.periods = state.matches[matchIndex].periods.map((p) => ({ ...p }));
           saveState();
           renderSchedule();
+          renderRotationSummary();
         }
       }
 
@@ -648,23 +714,6 @@
       function isValidCombo(combo) {
         const counts = getComboRoleCounts(combo);
         return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
-      }
-
-      function scoreCombo(combo) {
-        const counts = { dribbler: 0, inbounder: 0, runner: 0 };
-        combo.forEach((player) => {
-          if (player.roles.dribbler) counts.dribbler += 1;
-          if (player.roles.inbounder) counts.inbounder += 1;
-          if (player.roles.runner) counts.runner += 1;
-        });
-
-        const specialCount = combo.filter((player) => specialIds.includes(player.id)).length;
-        let score = 0;
-        score += Math.abs(counts.dribbler - 2) * 12;
-        score += Math.abs(counts.runner - 2) * 12;
-        score += Math.abs(counts.inbounder - 1) * 12;
-        score += Math.max(0, specialCount - 2) * 100;
-        return score;
       }
 
       function generateBalancedRotation() {
@@ -742,6 +791,7 @@
 
         saveState();
         renderSchedule();
+        renderRotationSummary();
       }
 
       function resetState() {
@@ -758,6 +808,7 @@
       function render() {
         renderPlayers();
         renderSchedule();
+        renderRotationSummary();
         renderMatches();
       }
 
@@ -782,6 +833,7 @@
           player.name = event.target.value || "Nieuwe speler";
           saveState();
           renderSchedule();
+          renderRotationSummary();
           return;
         }
 
@@ -801,6 +853,7 @@
           player.roles[role] = event.target.checked;
           saveState();
           renderSchedule();
+          renderRotationSummary();
           return;
         }
 
@@ -812,6 +865,7 @@
           period.selected[slotIndex] = event.target.value || null;
           saveState();
           renderSchedule();
+          renderRotationSummary();
         }
       });
 
