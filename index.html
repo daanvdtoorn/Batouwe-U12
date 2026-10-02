@@ -460,11 +460,13 @@
 
       const specialIds = ["guus", "lucas", "sander", "niels"];
       const periodCount = 8;
+      const playersPerPeriod = 5;
+      const totalSlots = periodCount * playersPerPeriod;
 
       function getDefaultState() {
         return {
           players: basePlayers.map((player) => ({ ...player, roles: { ...player.roles } })),
-          periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) })),
+          periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(playersPerPeriod).fill(null) })),
           matches: []
         };
       }
@@ -479,10 +481,10 @@
             ? saved.periods.map((period, idx) => ({
                 id: idx + 1,
                 selected: Array.isArray(period.selected)
-                  ? period.selected.slice(0, 5).concat(Array(5).fill(null)).slice(0, 5)
-                  : Array(5).fill(null)
+                  ? period.selected.slice(0, playersPerPeriod).concat(Array(playersPerPeriod).fill(null)).slice(0, playersPerPeriod)
+                  : Array(playersPerPeriod).fill(null)
               }))
-            : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) }));
+            : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(playersPerPeriod).fill(null) }));
 
           const matches = Array.isArray(saved.matches) ? saved.matches : [];
 
@@ -551,12 +553,14 @@
           return;
         }
 
+        const targetRounds = presentPlayers.length > 0 ? totalSlots / presentPlayers.length : 0;
+
         rotationSummary.innerHTML = presentPlayers.map((player) => {
           const count = getPlayerRotationCount(player.id);
           return `
             <div class="stat-pill">
               <span class="name">${player.name}</span>
-              <span class="count">${count}/${periodCount}</span>
+              <span class="count">${count}/${Math.round(targetRounds)}</span>
             </div>
           `;
         }).join("");
@@ -575,14 +579,14 @@
 
       function isValidPeriod(period) {
         const counts = getCounts(period);
-        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.total <= 5 && counts.special <= 2;
+        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.total === playersPerPeriod && counts.special <= 2;
       }
 
       function renderSchedule() {
         scheduleGrid.innerHTML = state.periods.map((period, index) => {
           const counts = getCounts(period);
           const valid = isValidPeriod(period);
-          const slots = Array.from({ length: 5 }, (_, slotIndex) => {
+          const slots = Array.from({ length: playersPerPeriod }, (_, slotIndex) => {
             const playerId = period.selected[slotIndex];
             const options = [
               '<option value="">Leeg</option>',
@@ -603,7 +607,7 @@
             <article class="period-card ${valid ? "" : "invalid"}">
               <div class="period-head">
                 <h3>Periode ${index + 1}</h3>
-                <span class="role-badge ${counts.total ? "dribbler" : "inbounder"}">${counts.total}/5</span>
+                <span class="role-badge ${counts.total ? "dribbler" : "inbounder"}">${counts.total}/${playersPerPeriod}</span>
               </div>
               ${slots}
               <div class="badge-row">
@@ -700,7 +704,7 @@
         return [...withFirst, ...withoutFirst];
       }
 
-      function getComboRoleCounts(combo) {
+      function isValidCombo(combo) {
         const counts = { dribbler: 0, inbounder: 0, runner: 0, special: 0 };
         combo.forEach((player) => {
           if (player.roles.dribbler) counts.dribbler += 1;
@@ -708,59 +712,44 @@
           if (player.roles.runner) counts.runner += 1;
           if (specialIds.includes(player.id)) counts.special += 1;
         });
-        return counts;
-      }
-
-      function isValidCombo(combo) {
-        const counts = getComboRoleCounts(combo);
         return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
       }
 
-      function scoreFairCombo(combo, usage, presentPlayers) {
-        const target = (periodCount * 5) / presentPlayers.length;
-        const repeatedPenalty = combo.reduce((total, player) => total + usage[player.id] * 70, 0);
-        const fairnessPenalty = combo.reduce((total, player) => {
-          const projected = usage[player.id] + 1;
-          return total + Math.abs(projected - target) * 35;
-        }, 0);
-
-        const specialPenalty = combo.filter((player) => specialIds.includes(player.id)).length * 20;
-        const overUsePenalty = combo.reduce((total, player) => {
-          return total + Math.max(0, usage[player.id] - Math.ceil(target)) * 200;
-        }, 0);
-
-        return repeatedPenalty + fairnessPenalty + specialPenalty + overUsePenalty;
-      }
-
-      function generateBalancedRotation() {
+      function generateFairRotation() {
         const present = getPresentPlayers();
-        if (present.length < 5) {
-          alert("Niet genoeg spelers aanwezig (minimaal 5 nodig).");
+        if (present.length < playersPerPeriod) {
+          alert(`Niet genoeg spelers aanwezig (minimaal ${playersPerPeriod} nodig).`);
           return null;
         }
 
-        const validCombos = combinations(present, 5).filter(isValidCombo);
+        const validCombos = combinations(present, playersPerPeriod).filter(isValidCombo);
         if (!validCombos.length) {
-          alert("Er is geen geldige 5-speler combinatie mogelijk met de huidige rollen en regels.");
+          alert("Er is geen geldige combinatie mogelijk met de huidige rollen en regels.");
           return null;
         }
 
-        const usage = Object.fromEntries(present.map((player) => [player.id, 0]));
+        const targetPerPlayer = totalSlots / present.length;
+        const usage = Object.fromEntries(present.map((p) => [p.id, 0]));
         const selectedPeriods = [];
 
-        for (let periodIndex = 0; periodIndex < periodCount; periodIndex++) {
+        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
           let bestCombo = null;
           let bestScore = Number.POSITIVE_INFINITY;
 
           for (const combo of validCombos) {
-            const comboKey = combo.map((player) => player.id).sort().join("|");
+            const comboKey = combo.map((p) => p.id).sort().join("|");
+            const alreadyUsed = selectedPeriods.some((s) => s.sort().join("|") === comboKey);
 
-            const alreadySelected = selectedPeriods.some((period) => {
-              const ids = period.slice().sort().join("|");
-              return ids === comboKey;
-            });
+            let score = 0;
 
-            const score = scoreFairCombo(combo, usage, present) + (alreadySelected ? 4000 : 0);
+            // Fairness: prioritize players who are below target
+            score += combo.reduce((total, p) => {
+              const deficit = targetPerPlayer - usage[p.id];
+              return total + (deficit > 0 ? -deficit * 100 : Math.abs(deficit) * 200);
+            }, 0);
+
+            // Penalty for reusing exact combo
+            score += alreadyUsed ? 5000 : 0;
 
             if (score < bestScore) {
               bestScore = score;
@@ -769,29 +758,25 @@
           }
 
           if (!bestCombo) {
-            alert("Kon geen eerlijk schema maken voor alle periodes.");
+            alert("Kon geen eerlijk schema genereren.");
             return null;
           }
 
-          selectedPeriods.push(bestCombo.map((player) => player.id));
-          bestCombo.forEach((player) => {
-            usage[player.id] += 1;
+          selectedPeriods.push(bestCombo.map((p) => p.id));
+          bestCombo.forEach((p) => {
+            usage[p.id] += 1;
           });
         }
 
-        return selectedPeriods.map((period) => {
-          const selected = [...period];
-          while (selected.length < 5) selected.push(null);
-          return selected.slice(0, 5);
-        });
+        return selectedPeriods;
       }
 
       function generateAllPeriods() {
-        const rotations = generateBalancedRotation();
+        const rotations = generateFairRotation();
         if (!rotations) return;
 
         state.periods.forEach((period, idx) => {
-          period.selected = rotations[idx] || Array(5).fill(null);
+          period.selected = rotations[idx] || Array(playersPerPeriod).fill(null);
         });
 
         saveState();
