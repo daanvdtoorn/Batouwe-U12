@@ -164,9 +164,7 @@
         text-align: center;
       }
 
-      thead th:nth-child(2) {
-        text-align: left;
-      }
+      thead th:nth-child(2) { text-align: left; }
 
       tbody td {
         padding: 8px 8px;
@@ -174,9 +172,7 @@
         text-align: center;
       }
 
-      tbody td:nth-child(2) {
-        text-align: left;
-      }
+      tbody td:nth-child(2) { text-align: left; }
 
       input[type="text"], input[type="number"], input[type="date"], select {
         width: 100%;
@@ -273,7 +269,6 @@
         background: rgba(255,255,255,0.04);
         color: white;
         font-size: 1rem;
-        padding: 0;
         width: 38px;
         height: 38px;
       }
@@ -328,9 +323,9 @@
       .status.ok { color: var(--ok); }
       .status.warn { color: var(--warn); }
 
-      .match-form {
+      .match-form, .template-form {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
         gap: 12px;
         align-items: end;
         margin-bottom: 18px;
@@ -385,12 +380,36 @@
         font-size: 0.8rem;
       }
 
-      .player-form {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-        align-items: end;
-        margin-bottom: 16px;
+      .template-shelf {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+      }
+
+      .template-shelf .template-name {
+        flex: 1 1 180px;
+      }
+
+      .template-shelf .template-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .template-box {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        color: var(--text);
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+
+      .template-box.active {
+        border-color: var(--red);
+        background: rgba(183, 25, 31, 0.15);
       }
 
       .modal {
@@ -550,15 +569,37 @@
             <button class="primary" id="addMatchBtn">Toevoegen</button>
           </div>
 
+          <div class="template-form">
+            <div class="form-group">
+              <label>Template naam</label>
+              <input type="text" id="templateName" placeholder="Bijv. Vitesse 1" />
+            </div>
+
+            <button class="secondary" id="saveTemplateBtn">Bewaar template</button>
+
+            <div class="form-group">
+              <label>Template shelf</label>
+              <div class="template-shelf">
+                <div class="template-name">
+                  <select id="templateSelect">
+                    <option value="">Geen template</option>
+                  </select>
+                </div>
+                <div class="template-actions">
+                  <button class="secondary" id="loadTemplateBtn">Laad</button>
+                  <button class="secondary" id="deleteTemplateBtn">Verwijder</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="match-grid" id="matchGrid"></div>
         </div>
       </section>
 
       <section class="players-panel">
         <div class="panel-header">
-          <div>
-            <h2>Spelers</h2>
-          </div>
+          <div><h2>Spelers</h2></div>
           <div class="panel-controls">
             <div class="summary-pill" id="presenceSummary">0 spelers aanwezig</div>
             <button class="primary" id="addPlayerBtn" style="padding: 6px 12px; font-size: 0.9rem;">+ Speler</button>
@@ -668,11 +709,21 @@
 
       let editingPlayerId = null;
 
+      function clonePeriods(periods) {
+        return (periods || []).map((period, i) => ({
+          id: period.id ?? i + 1,
+          selected: Array.isArray(period.selected)
+            ? period.selected.slice(0, playersPerPeriod).concat(Array(playersPerPeriod).fill(null)).slice(0, playersPerPeriod)
+            : Array(playersPerPeriod).fill(null)
+        }));
+      }
+
       function getDefaultState() {
         return {
           players: basePlayers.map((player) => ({ ...player, roles: { ...player.roles } })),
           periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(playersPerPeriod).fill(null) })),
-          matches: []
+          matches: [],
+          templates: []
         };
       }
 
@@ -681,17 +732,12 @@
           const saved = JSON.parse(localStorage.getItem("basketballRotationState"));
           if (!saved || !Array.isArray(saved.players)) return getDefaultState();
 
-          const players = saved.players.map((p) => ({ ...p, roles: { ...(p.roles || {}) } }));
-          const periods = Array.isArray(saved.periods) && saved.periods.length === periodCount
-            ? saved.periods.map((period, idx) => ({
-                id: idx + 1,
-                selected: Array.isArray(period.selected)
-                  ? period.selected.slice(0, playersPerPeriod).concat(Array(playersPerPeriod).fill(null)).slice(0, playersPerPeriod)
-                  : Array(playersPerPeriod).fill(null)
-              }))
-            : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(playersPerPeriod).fill(null) }));
-
-          return { players, periods, matches: Array.isArray(saved.matches) ? saved.matches : [] };
+          return {
+            players: saved.players.map((p) => ({ ...p, roles: { ...(p.roles || {}) } })),
+            periods: clonePeriods(Array.isArray(saved.periods) ? saved.periods : []),
+            matches: Array.isArray(saved.matches) ? saved.matches : [],
+            templates: Array.isArray(saved.templates) ? saved.templates : []
+          };
         } catch {
           return getDefaultState();
         }
@@ -703,8 +749,13 @@
       const presenceSummary = document.getElementById("presenceSummary");
       const rotationSummary = document.getElementById("rotationSummary");
       const matchGrid = document.getElementById("matchGrid");
+      const templateSelect = document.getElementById("templateSelect");
+      const templateNameInput = document.getElementById("templateName");
       const addMatchBtn = document.getElementById("addMatchBtn");
       const addPlayerBtn = document.getElementById("addPlayerBtn");
+      const saveTemplateBtn = document.getElementById("saveTemplateBtn");
+      const loadTemplateBtn = document.getElementById("loadTemplateBtn");
+      const deleteTemplateBtn = document.getElementById("deleteTemplateBtn");
       const playerModal = document.getElementById("playerModal");
       const playerForm = document.getElementById("playerForm");
       const closeModalBtn = document.getElementById("closeModalBtn");
@@ -871,6 +922,7 @@
         matchGrid.innerHTML = state.matches.map((match, index) => {
           const date = new Date(match.date);
           const label = isNaN(date.getTime()) ? match.date : date.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+
           return `
             <div class="match-card">
               <div class="match-info">
@@ -887,23 +939,31 @@
 
         document.querySelectorAll("#loadMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = Number(e.target.dataset.index);
+            const index = Number(e.currentTarget.dataset.index);
             const match = state.matches[index];
             if (!match) return;
-            state.periods = match.periods.map((p) => ({ ...p, selected: [...p.selected] }));
+
+            state.periods = clonePeriods(match.periods || []);
             saveState();
-            renderSchedule();
+            render();
           });
         });
 
         document.querySelectorAll("#deleteMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = Number(e.target.dataset.index);
+            const index = Number(e.currentTarget.dataset.index);
             state.matches.splice(index, 1);
             saveState();
             renderMatches();
           });
         });
+      }
+
+      function renderTemplates() {
+        templateSelect.innerHTML = '<option value="">Geen template</option>' +
+          state.templates.map((template) => `
+            <option value="${template.id}">${template.name}</option>
+          `).join("");
       }
 
       function addMatch() {
@@ -918,13 +978,67 @@
         state.matches.push({
           date,
           opponent,
-          periods: state.periods.map((p) => ({ ...p, selected: [...p.selected] }))
+          periods: clonePeriods(state.periods)
         });
 
         saveState();
         renderMatches();
         document.getElementById("matchDate").value = "";
         document.getElementById("matchOpponent").value = "";
+      }
+
+      function saveCurrentTemplate() {
+        const name = templateNameInput.value.trim();
+        if (!name) {
+          alert("Vul een template naam in.");
+          return;
+        }
+
+        const existing = state.templates.find((template) => template.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          existing.periods = clonePeriods(state.periods);
+          saveState();
+          renderTemplates();
+          templateNameInput.value = "";
+          return;
+        }
+
+        state.templates.push({
+          id: Date.now().toString(),
+          name,
+          periods: clonePeriods(state.periods)
+        });
+
+        saveState();
+        renderTemplates();
+        templateNameInput.value = "";
+      }
+
+      function loadSelectedTemplate() {
+        const selectedId = templateSelect.value;
+        if (!selectedId) {
+          alert("Kies eerst een template.");
+          return;
+        }
+
+        const template = state.templates.find((item) => item.id === selectedId);
+        if (!template) return;
+
+        state.periods = clonePeriods(template.periods || []);
+        saveState();
+        render();
+      }
+
+      function deleteSelectedTemplate() {
+        const selectedId = templateSelect.value;
+        if (!selectedId) {
+          alert("Kies eerst een template om te verwijderen.");
+          return;
+        }
+
+        state.templates = state.templates.filter((item) => item.id !== selectedId);
+        saveState();
+        renderTemplates();
       }
 
       function openPlayerModal(playerId = null) {
@@ -1031,7 +1145,6 @@
         if (!validCombos.length) {
           const fallback = [];
           const shuffled = [...present].sort(() => Math.random() - 0.5);
-
           for (let i = 0; i < periodCount; i++) {
             const group = [];
             for (let j = 0; j < playersPerPeriod; j++) {
@@ -1040,7 +1153,6 @@
             }
             fallback.push(group);
           }
-
           return fallback.map((period) => period.map((player) => player ? player.id : null));
         }
 
@@ -1100,6 +1212,7 @@
         state.players = fresh.players;
         state.periods = fresh.periods;
         state.matches = fresh.matches;
+        state.templates = fresh.templates;
         saveState();
         render();
       }
@@ -1109,6 +1222,7 @@
         renderSchedule();
         renderRotationSummary();
         renderMatches();
+        renderTemplates();
       }
 
       document.querySelectorAll(".collapse-btn").forEach((btn) => {
@@ -1127,6 +1241,9 @@
       document.getElementById("printBtn").addEventListener("click", () => window.print());
       addMatchBtn.addEventListener("click", addMatch);
       addPlayerBtn.addEventListener("click", () => openPlayerModal());
+      saveTemplateBtn.addEventListener("click", saveCurrentTemplate);
+      loadTemplateBtn.addEventListener("click", loadSelectedTemplate);
+      deleteTemplateBtn.addEventListener("click", deleteSelectedTemplate);
 
       playerForm.addEventListener("submit", savePlayer);
       closeModalBtn.addEventListener("click", closePlayerModal);
