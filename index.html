@@ -302,6 +302,11 @@
         color: white;
         font-size: 0.72rem;
         font-weight: 700;
+        cursor: pointer;
+      }
+
+      .role-badge:hover {
+        opacity: 0.8;
       }
 
       .role-badge.dribbler { background: var(--dribbler); }
@@ -395,21 +400,6 @@
       .template-shelf .template-actions {
         display: flex;
         gap: 8px;
-      }
-
-      .template-box {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 8px 12px;
-        color: var(--text);
-        font-size: 0.85rem;
-        cursor: pointer;
-      }
-
-      .template-box.active {
-        border-color: var(--red);
-        background: rgba(183, 25, 31, 0.15);
       }
 
       .modal {
@@ -687,6 +677,40 @@
       </div>
     </div>
 
+    <div class="modal" id="roleModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="roleModalTitle">Rollen aanpassen</h2>
+          <button class="close-btn" id="closeRoleModalBtn">&times;</button>
+        </div>
+
+        <form class="modal-form" id="roleForm">
+          <div class="modal-form-group">
+            <label>Rollen voor <strong id="rolePlayerName">speler</strong></label>
+            <div class="role-checkboxes">
+              <label>
+                <input type="checkbox" id="schemaRoleDribbler" />
+                Dribbler (D)
+              </label>
+              <label>
+                <input type="checkbox" id="schemaRoleInbounder" />
+                Inbounder (I)
+              </label>
+              <label>
+                <input type="checkbox" id="schemaRoleRunner" />
+                Runner (R)
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="submit" class="primary">Opslaan</button>
+            <button type="button" class="secondary" id="cancelRoleBtn">Annuleren</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
       const basePlayers = [
         { id: "guus", name: "Guus", number: 10, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
@@ -703,11 +727,12 @@
         { id: "nouf", name: "Nouf", number: 22, present: true, roles: { dribbler: false, inbounder: false, runner: true } }
       ];
 
-      const specialIds = ["guus", "lucas", "sander", "niels"];
+      const specialIds = ["guus", "lucas", "sander"];
       const periodCount = 8;
       const playersPerPeriod = 5;
 
       let editingPlayerId = null;
+      let editingRolePlayerId = null;
 
       function clonePeriods(periods) {
         return (periods || []).map((period, i) => ({
@@ -761,6 +786,11 @@
       const closeModalBtn = document.getElementById("closeModalBtn");
       const cancelBtn = document.getElementById("cancelBtn");
       const modalTitle = document.getElementById("modalTitle");
+      const roleModal = document.getElementById("roleModal");
+      const roleForm = document.getElementById("roleForm");
+      const closeRoleModalBtn = document.getElementById("closeRoleModalBtn");
+      const cancelRoleBtn = document.getElementById("cancelRoleBtn");
+      const rolePlayerName = document.getElementById("rolePlayerName");
 
       function saveState() {
         localStorage.setItem("basketballRotationState", JSON.stringify(state));
@@ -792,6 +822,10 @@
         if (p.inbounder) return "inbounder";
         if (p.runner) return "runner";
         return "neutral";
+      }
+
+      function getRoleBadgeLabel(badge) {
+        return badge === "dribbler" ? "D" : badge === "inbounder" ? "I" : badge === "runner" ? "R" : badge === "multi" ? "M" : "N";
       }
 
       function renderPlayers() {
@@ -876,7 +910,7 @@
               <div class="slot-name">
                 ${player ? player.name : "Leeg"}
               </div>
-              ${player ? `<div class="badge-row"><span class="role-badge ${badge}">${badge === "dribbler" ? "D" : badge === "inbounder" ? "I" : badge === "runner" ? "R" : badge === "multi" ? "M" : "N"}</span></div>` : ""}
+              ${player ? `<div class="badge-row"><span class="role-badge ${badge}" data-player-id="${selectedId}">${getRoleBadgeLabel(badge)}</span></div>` : ""}
             `;
           }).join("");
 
@@ -914,6 +948,15 @@
             saveState();
             renderSchedule();
             renderRotationSummary();
+          });
+        });
+
+        document.querySelectorAll(".role-badge[data-player-id]").forEach((badge) => {
+          badge.addEventListener("click", () => {
+            const playerId = badge.dataset.playerId;
+            const player = playerById(playerId);
+            if (!player) return;
+            openRoleModal(playerId);
           });
         });
       }
@@ -1070,6 +1113,24 @@
         editingPlayerId = null;
       }
 
+      function openRoleModal(playerId) {
+        editingRolePlayerId = playerId;
+        const player = playerById(playerId);
+        if (!player) return;
+
+        rolePlayerName.textContent = player.name;
+        document.getElementById("schemaRoleDribbler").checked = player.roles.dribbler;
+        document.getElementById("schemaRoleInbounder").checked = player.roles.inbounder;
+        document.getElementById("schemaRoleRunner").checked = player.roles.runner;
+
+        roleModal.classList.add("show");
+      }
+
+      function closeRoleModal() {
+        roleModal.classList.remove("show");
+        editingRolePlayerId = null;
+      }
+
       function savePlayer(e) {
         e.preventDefault();
 
@@ -1107,6 +1168,26 @@
         saveState();
         closePlayerModal();
         render();
+      }
+
+      function saveRoles(e) {
+        e.preventDefault();
+
+        if (!editingRolePlayerId) return;
+
+        const player = playerById(editingRolePlayerId);
+        if (!player) return;
+
+        player.roles = {
+          dribbler: document.getElementById("schemaRoleDribbler").checked,
+          inbounder: document.getElementById("schemaRoleInbounder").checked,
+          runner: document.getElementById("schemaRoleRunner").checked
+        };
+
+        saveState();
+        closeRoleModal();
+        renderSchedule();
+        renderRotationSummary();
       }
 
       function getRoleCounts(players) {
@@ -1246,11 +1327,18 @@
       deleteTemplateBtn.addEventListener("click", deleteSelectedTemplate);
 
       playerForm.addEventListener("submit", savePlayer);
+      roleForm.addEventListener("submit", saveRoles);
       closeModalBtn.addEventListener("click", closePlayerModal);
       cancelBtn.addEventListener("click", closePlayerModal);
+      closeRoleModalBtn.addEventListener("click", closeRoleModal);
+      cancelRoleBtn.addEventListener("click", closeRoleModal);
 
       playerModal.addEventListener("click", (e) => {
         if (e.target === playerModal) closePlayerModal();
+      });
+
+      roleModal.addEventListener("click", (e) => {
+        if (e.target === roleModal) closeRoleModal();
       });
 
       document.addEventListener("change", (event) => {
