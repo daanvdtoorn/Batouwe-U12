@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basketbal Rotatie Schema</title>
+    <style>
+      :root {
+        --bg: #f2f2f2;
+        --panel: rgba(255,255,255,0.9);
+        --red: #b7191f;
+        --red-dark: #8b1117;
+        --ink: #1f1f1f;
+        --muted: #666;
+        --line: #d7d7d7;
+        --dribbler: #b7191f;
+        --inbounder: #a0a0a0;
+        --runner: #7e1f1f;
+        --ok: #2d8a3f;
+        --warn: #d48300;
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      body {
+        min-height: 100vh;
+        background:
+          linear-gradient(rgba(255,255,255,0.72), rgba(255,255,255,0.72)),
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='800' viewBox='0 0 1200 800'%3E%3Cg opacity='0.16'%3E%3Cpath d='M0 0H1200V800H0Z' fill='%23f1f1f1'/%3E%3Cpath d='M260 0L0 420L0 800H1200V700L900 0H260Z' fill='%23b7191f'/%3E%3Cpath d='M0 100L1030 800H1200V800H0V100Z' fill='%23dcdcdc'/%3E%3C/svg%3E") center/cover no-repeat fixed;
+      }
+
+      .page-shell {
+        max-width: 1500px;
+        margin: 24px auto;
+        padding: 18px;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        background: rgba(255,255,255,0.82);
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        padding: 18px 20px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 2vw, 2.8rem);
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: var(--red-dark);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      button {
+        border: none;
+        border-radius: 10px;
+        padding: 11px 16px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: var(--red);
+        color: white;
+      }
+
+      .secondary {
+        background: #efefef;
+        color: var(--ink);
+        border: 1px solid var(--line);
+      }
+
+      .players-panel, .schedule-panel {
+        background: var(--panel);
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 18px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      }
+
+      .players-panel {
+        padding: 14px;
+        margin-bottom: 22px;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--red-dark);
+      }
+
+      .summary-pill {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255,255,255,0.72);
+      }
+
+      thead th {
+        background: var(--red);
+        color: white;
+        text-align: center;
+        padding: 12px 10px;
+        border-right: 1px solid rgba(255,255,255,0.15);
+      }
+
+      thead th:nth-child(2) {
+        text-align: left;
+      }
+
+      tbody td {
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: center;
+        background: rgba(255,255,255,0.18);
+      }
+
+      tbody tr:nth-child(even) td {
+        background: rgba(0,0,0,0.02);
+      }
+
+      tbody td:nth-child(2) {
+        text-align: left;
+      }
+
+      input[type="text"], input[type="number"], select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 10px;
+        font: inherit;
+        background: white;
+        color: var(--ink);
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--red);
+      }
+
+      .schedule-panel {
+        padding: 16px;
+      }
+
+      .schedule-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+      }
+
+      .period-card {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid var(--line);
+        border-left: 6px solid var(--red);
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .period-card.invalid {
+        border-left-color: var(--warn);
+      }
+
+      .period-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .period-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .badge-row {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .role-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        padding: 5px 8px;
+        border-radius: 999px;
+        color: white;
+        font-size: 0.72rem;
+        font-weight: 700;
+      }
+
+      .role-badge.dribbler { background: var(--dribbler); }
+      .role-badge.inbounder { background: var(--inbounder); }
+      .role-badge.runner { background: var(--runner); }
+
+      .slot {
+        margin-bottom: 10px;
+      }
+
+      .slot label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.7rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        border-top: 1px solid var(--line);
+        padding-top: 8px;
+        font-size: 0.8rem;
+        color: var(--muted);
+      }
+
+      .status.ok { color: var(--ok); }
+      .status.warn { color: var(--warn); }
+
+      @media (max-width: 700px) {
+        .topbar { flex-direction: column; align-items: flex-start; }
+        .actions { width: 100%; }
+        .actions button { flex: 1 1 140px; }
+      }
+
+      @media print {
+        body { background: white; }
+        .topbar, .actions, .status { display: none !important; }
+        .page-shell { margin: 0; max-width: none; padding: 0; }
+        .players-panel, .schedule-panel {
+          box-shadow: none;
+          border: none;
+          background: white;
+          break-inside: avoid;
+        }
+        .period-card { break-inside: avoid; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <h1>Basketbal Rotatie Schema</h1>
+        <div class="actions">
+          <button class="primary" id="generateBtn">Genereer schema</button>
+          <button class="secondary" id="resetBtn">Reset</button>
+          <button class="secondary" id="printBtn">Print</button>
+        </div>
+      </header>
+
+      <section class="players-panel">
+        <div class="panel-header">
+          <h2>Spelers</h2>
+          <div class="summary-pill" id="presenceSummary">0 spelers aanwezig</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Speelt</th>
+              <th>Naam</th>
+              <th>Rugnummer</th>
+              <th>Dribbler</th>
+              <th>Inbounder</th>
+              <th>Runner</th>
+            </tr>
+          </thead>
+          <tbody id="playersBody"></tbody>
+        </table>
+      </section>
+
+      <section class="schedule-panel">
+        <div class="schedule-grid" id="scheduleGrid"></div>
+      </section>
+    </div>
+
+    <script>
+      const basePlayers = [
+        { id: "sander", name: "Sander Wolf", number: 27, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
+        { id: "duuk", name: "Duuk van den Anker", number: 13, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
+        { id: "nouf", name: "Nouf Faber", number: 22, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
+        { id: "vuk", name: "Vuk Jankovic", number: 55, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "lucas", name: "Lucas Fu", number: 11, present: true, roles: { dribbler: true, inbounder: false, runner: true } },
+        { id: "noah", name: "Noah van den Toorn", number: 30, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "joris", name: "Joris Mepsehen", number: 15, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "tanne", name: "Tanne Du Bois", number: 16, present: true, roles: { dribbler: false, inbounder: true, runner: true } },
+        { id: "lieuwe", name: "Lieuwe Berentsen", number: 20, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "tygo", name: "Tygo Janssen", number: 14, present: true, roles: { dribbler: true, inbounder: true, runner: true } },
+        { id: "guus", name: "Guus Berendsen", number: 10, present: true, roles: { dribbler: false, inbounder: false, runner: true } },
+        { id: "niels", name: "Niels Engelenburg", number: 41, present: true, roles: { dribbler: false, inbounder: false, runner: true } }
+      ];
+
+      const specialIds = ["guus", "lucas", "sander", "niels"];
+      const periodCount = 8;
+
+      function getDefaultState() {
+        return {
+          players: basePlayers.map((player) => ({ ...player, roles: { ...player.roles } })),
+          periods: Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) }))
+        };
+      }
+
+      function loadState() {
+        try {
+          const saved = JSON.parse(localStorage.getItem("basketballRotationState"));
+          if (!saved || !Array.isArray(saved.players)) return getDefaultState();
+
+          const players = saved.players.map((p) => ({ ...p, roles: { ...(p.roles || {}) } }));
+          const periods = Array.isArray(saved.periods) && saved.periods.length === periodCount
+            ? saved.periods.map((period, idx) => ({
+                id: idx + 1,
+                selected: Array.isArray(period.selected)
+                  ? period.selected.slice(0, 5).concat(Array(5).fill(null)).slice(0, 5)
+                  : Array(5).fill(null)
+              }))
+            : Array.from({ length: periodCount }, (_, i) => ({ id: i + 1, selected: Array(5).fill(null) }));
+
+          return { players, periods };
+        } catch {
+          return getDefaultState();
+        }
+      }
+
+      const state = loadState();
+      const playersBody = document.getElementById("playersBody");
+      const scheduleGrid = document.getElementById("scheduleGrid");
+      const presenceSummary = document.getElementById("presenceSummary");
+
+      function saveState() {
+        localStorage.setItem("basketballRotationState", JSON.stringify(state));
+      }
+
+      function getPresentPlayers() {
+        return state.players.filter((player) => player.present);
+      }
+
+      function updatePresenceSummary() {
+        const present = getPresentPlayers().length;
+        presenceSummary.textContent = `${present} speler${present === 1 ? "" : "s"} aanwezig`;
+      }
+
+      function playerById(playerId) {
+        return state.players.find((player) => player.id === playerId);
+      }
+
+      function renderPlayers() {
+        playersBody.innerHTML = state.players.map((player) => `
+          <tr data-player-id="${player.id}">
+            <td><input type="checkbox" class="present-toggle" data-player-id="${player.id}" ${player.present ? "checked" : ""} /></td>
+            <td><input type="text" class="player-name" data-player-id="${player.id}" value="${player.name}" /></td>
+            <td><input type="number" class="player-number" data-player-id="${player.id}" value="${player.number}" min="0" max="99" /></td>
+            <td><input type="checkbox" class="role-toggle" data-player-id="${player.id}" data-role="dribbler" ${player.roles.dribbler ? "checked" : ""} /></td>
+            <td><input type="checkbox" class="role-toggle" data-player-id="${player.id}" data-role="inbounder" ${player.roles.inbounder ? "checked" : ""} /></td>
+            <td><input type="checkbox" class="role-toggle" data-player-id="${player.id}" data-role="runner" ${player.roles.runner ? "checked" : ""} /></td>
+          </tr>
+        `).join("");
+
+        updatePresenceSummary();
+      }
+
+      function getCounts(period) {
+        const players = period.selected.map((id) => playerById(id)).filter(Boolean);
+        return {
+          dribbler: players.filter((p) => p.roles.dribbler).length,
+          inbounder: players.filter((p) => p.roles.inbounder).length,
+          runner: players.filter((p) => p.roles.runner).length,
+          total: players.length,
+          special: players.filter((p) => specialIds.includes(p.id)).length
+        };
+      }
+
+      function isValidPeriod(period) {
+        const counts = getCounts(period);
+        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.total <= 5 && counts.special <= 2;
+      }
+
+      function renderSchedule() {
+        scheduleGrid.innerHTML = state.periods.map((period, index) => {
+          const counts = getCounts(period);
+          const valid = isValidPeriod(period);
+          const slots = Array.from({ length: 5 }, (_, slotIndex) => {
+            const playerId = period.selected[slotIndex];
+            const options = [
+              '<option value="">Leeg</option>',
+              ...getPresentPlayers().map((player) => `<option value="${player.id}" ${player.id === playerId ? "selected" : ""}>${player.name} (${player.number})</option>`)
+            ].join("");
+
+            return `
+              <div class="slot">
+                <label>Speler ${slotIndex + 1}</label>
+                <select data-period-id="${period.id}" data-slot-index="${slotIndex}" class="period-player-select">
+                  ${options}
+                </select>
+              </div>
+            `;
+          }).join("");
+
+          return `
+            <article class="period-card ${valid ? "" : "invalid"}">
+              <div class="period-head">
+                <h3>Periode ${index + 1}</h3>
+                <span class="role-badge ${counts.total ? "dribbler" : "inbounder"}">${counts.total}/5</span>
+              </div>
+              ${slots}
+              <div class="badge-row">
+                <span class="role-badge dribbler">D ${counts.dribbler}</span>
+                <span class="role-badge inbounder">I ${counts.inbounder}</span>
+                <span class="role-badge runner">R ${counts.runner}</span>
+              </div>
+              <div class="status ${valid ? "ok" : "warn"}">
+                <span>status</span>
+                <strong>${valid ? "OK" : "WAARSCHUWING"}</strong>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      function combinations(arr, size) {
+        if (!size) return [[]];
+        if (!arr.length) return [];
+        const [first, ...rest] = arr;
+        const withFirst = combinations(rest, size - 1).map((combo) => [first, ...combo]);
+        const withoutFirst = combinations(rest, size);
+        return [...withFirst, ...withoutFirst];
+      }
+
+      function scoreCombo(combo) {
+        const counts = { dribbler: 0, inbounder: 0, runner: 0 };
+        combo.forEach((player) => {
+          if (player.roles.dribbler) counts.dribbler += 1;
+          if (player.roles.inbounder) counts.inbounder += 1;
+          if (player.roles.runner) counts.runner += 1;
+        });
+
+        const specialCount = combo.filter((player) => specialIds.includes(player.id)).length;
+        let score = 0;
+        score += Math.abs(counts.dribbler - 2) * 12;
+        score += Math.abs(counts.runner - 2) * 12;
+        score += Math.abs(counts.inbounder - 1) * 12;
+        score += Math.max(0, specialCount - 2) * 100;
+        return score;
+      }
+
+      function generatePeriodSelection() {
+        const present = getPresentPlayers();
+        if (present.length === 0) return Array(5).fill(null);
+
+        let bestCombo = null;
+        let bestScore = Number.POSITIVE_INFINITY;
+
+        for (let size = 1; size <= Math.min(5, present.length); size++) {
+          const candidateCombos = combinations(present, size);
+          candidateCombos.forEach((combo) => {
+            const counts = { dribbler: 0, inbounder: 0, runner: 0 };
+            combo.forEach((player) => {
+              if (player.roles.dribbler) counts.dribbler += 1;
+              if (player.roles.inbounder) counts.inbounder += 1;
+              if (player.roles.runner) counts.runner += 1;
+            });
+
+            const specialCount = combo.filter((player) => specialIds.includes(player.id)).length;
+            const valid = counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && specialCount <= 2;
+            const score = scoreCombo(combo);
+
+            if (valid || score < bestScore) {
+              if (valid) {
+                bestCombo = combo;
+                bestScore = -1;
+                return;
+              }
+              bestCombo = combo;
+              bestScore = score;
+            }
+          });
+
+          if (bestScore === -1) break;
+        }
+
+        const selected = bestCombo ? bestCombo.map((player) => player.id) : [];
+        while (selected.length < 5) selected.push(null);
+        return selected.slice(0, 5);
+      }
+
+      function generateAllPeriods() {
+        state.periods = state.periods.map((period) => ({ ...period, selected: generatePeriodSelection() }));
+        saveState();
+        renderSchedule();
+      }
+
+      function resetState() {
+        const ok = window.confirm("Weet je zeker dat je het schema wilt resetten?");
+        if (!ok) return;
+        const fresh = getDefaultState();
+        state.players = fresh.players;
+        state.periods = fresh.periods;
+        saveState();
+        render();
+      }
+
+      function render() {
+        renderPlayers();
+        renderSchedule();
+      }
+
+      document.getElementById("generateBtn").addEventListener("click", generateAllPeriods);
+      document.getElementById("resetBtn").addEventListener("click", resetState);
+      document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+      document.addEventListener("change", (event) => {
+        if (event.target.matches(".present-toggle")) {
+          const player = playerById(event.target.dataset.playerId);
+          if (!player) return;
+          player.present = event.target.checked;
+          saveState();
+          render();
+          return;
+        }
+
+        if (event.target.matches(".player-name")) {
+          const player = playerById(event.target.dataset.playerId);
+          if (!player) return;
+          player.name = event.target.value || "Nieuwe speler";
+          saveState();
+          renderSchedule();
+          return;
+        }
+
+        if (event.target.matches(".player-number")) {
+          const player = playerById(event.target.dataset.playerId);
+          if (!player) return;
+          player.number = Number(event.target.value) || 0;
+          saveState();
+          renderSchedule();
+          return;
+        }
+
+        if (event.target.matches(".role-toggle")) {
+          const player = playerById(event.target.dataset.playerId);
+          if (!player) return;
+          const role = event.target.dataset.role;
+          player.roles[role] = event.target.checked;
+          saveState();
+          renderSchedule();
+          return;
+        }
+
+        if (event.target.matches(".period-player-select")) {
+          const periodId = Number(event.target.dataset.periodId);
+          const slotIndex = Number(event.target.dataset.slotIndex);
+          const period = state.periods.find((item) => item.id === periodId);
+          if (!period) return;
+          period.selected[slotIndex] = event.target.value || null;
+          saveState();
+          renderSchedule();
+        }
+      });
+
+      render();
+    </script>
+  </body>
+</html>
