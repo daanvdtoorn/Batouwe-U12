@@ -105,6 +105,12 @@
         color: white;
       }
 
+      .panel-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
       .summary-pill {
         background: rgba(255,255,255,0.04);
         border: 1px solid var(--line);
@@ -112,6 +118,31 @@
         padding: 7px 12px;
         color: var(--muted);
         font-size: 0.85rem;
+      }
+
+      .collapse-btn {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--text);
+        padding: 6px 10px;
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 8px;
+      }
+
+      .collapse-btn:hover {
+        background: rgba(255,255,255,0.1);
+      }
+
+      .panel-content {
+        max-height: 2000px;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+
+      .panel-content.collapsed {
+        max-height: 0;
+        overflow: hidden;
       }
 
       .players-layout {
@@ -252,6 +283,13 @@
         border-color: var(--red);
       }
 
+      .slot-name {
+        font-size: 0.72rem;
+        color: var(--muted);
+        padding: 2px 6px 8px 6px;
+        min-height: 20px;
+      }
+
       .badge-row {
         display: flex;
         gap: 6px;
@@ -347,6 +385,121 @@
         font-size: 0.8rem;
       }
 
+      .player-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        align-items: end;
+        margin-bottom: 16px;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      .modal-content {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-header h2 {
+        margin: 0;
+      }
+
+      .close-btn {
+        background: transparent;
+        border: none;
+        color: var(--text);
+        font-size: 28px;
+        cursor: pointer;
+      }
+
+      .modal-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .modal-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .modal-form-group label {
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .modal-form-group input,
+      .modal-form-group select {
+        background: #0f172a;
+        color: white;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px;
+        font: inherit;
+      }
+
+      .role-checkboxes {
+        display: flex;
+        gap: 20px;
+        margin-top: 8px;
+        flex-wrap: wrap;
+      }
+
+      .role-checkboxes label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: normal;
+      }
+
+      .modal-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .modal-buttons button {
+        flex: 1;
+      }
+
       @media (max-width: 900px) {
         .players-layout {
           grid-template-columns: 1fr;
@@ -381,48 +534,59 @@
       <section class="match-panel">
         <div class="panel-header">
           <h2>Wedstrijden</h2>
+          <button class="collapse-btn" data-panel="match">−</button>
         </div>
 
-        <div class="match-form">
-          <div class="form-group">
-            <label>Datum</label>
-            <input type="date" id="matchDate" />
+        <div class="panel-content" id="matchPanel">
+          <div class="match-form">
+            <div class="form-group">
+              <label>Datum</label>
+              <input type="date" id="matchDate" />
+            </div>
+            <div class="form-group">
+              <label>Tegenstander</label>
+              <input type="text" id="matchOpponent" placeholder="Tegenstander" />
+            </div>
+            <button class="primary" id="addMatchBtn">Toevoegen</button>
           </div>
-          <div class="form-group">
-            <label>Tegenstander</label>
-            <input type="text" id="matchOpponent" placeholder="Tegenstander" />
-          </div>
-          <button class="primary" id="addMatchBtn">Toevoegen</button>
-        </div>
 
-        <div class="match-grid" id="matchGrid"></div>
+          <div class="match-grid" id="matchGrid"></div>
+        </div>
       </section>
 
       <section class="players-panel">
         <div class="panel-header">
-          <h2>Spelers</h2>
-          <div class="summary-pill" id="presenceSummary">0 spelers aanwezig</div>
+          <div>
+            <h2>Spelers</h2>
+          </div>
+          <div class="panel-controls">
+            <div class="summary-pill" id="presenceSummary">0 spelers aanwezig</div>
+            <button class="primary" id="addPlayerBtn" style="padding: 6px 12px; font-size: 0.9rem;">+ Speler</button>
+            <button class="collapse-btn" data-panel="players">−</button>
+          </div>
         </div>
 
-        <div class="players-layout">
-          <div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Speelt</th>
-                  <th>Naam</th>
-                  <th>Nr.</th>
-                  <th>D</th>
-                  <th>I</th>
-                  <th>R</th>
-                </tr>
-              </thead>
-              <tbody id="playersBody"></tbody>
-            </table>
-          </div>
+        <div class="panel-content" id="playersPanel">
+          <div class="players-layout">
+            <div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Speelt</th>
+                    <th>Naam</th>
+                    <th>Nr.</th>
+                    <th>D</th>
+                    <th>I</th>
+                    <th>R</th>
+                  </tr>
+                </thead>
+                <tbody id="playersBody"></tbody>
+              </table>
+            </div>
 
-          <div>
-            <div class="rotation-summary" id="rotationSummary"></div>
+            <div>
+              <div class="rotation-summary" id="rotationSummary"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -430,9 +594,56 @@
       <section class="schedule-panel">
         <div class="panel-header">
           <h2>Roulatieschema</h2>
+          <button class="collapse-btn" data-panel="schedule">−</button>
         </div>
-        <div class="schedule-grid" id="scheduleGrid"></div>
+        <div class="panel-content" id="schedulePanel">
+          <div class="schedule-grid" id="scheduleGrid"></div>
+        </div>
       </section>
+    </div>
+
+    <div class="modal" id="playerModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Speler Toevoegen</h2>
+          <button class="close-btn" id="closeModalBtn">&times;</button>
+        </div>
+
+        <form class="modal-form" id="playerForm">
+          <div class="modal-form-group">
+            <label for="playerNameInput">Naam *</label>
+            <input type="text" id="playerNameInput" placeholder="Naam" required />
+          </div>
+
+          <div class="modal-form-group">
+            <label for="playerNumberInput">Rugnummer</label>
+            <input type="number" id="playerNumberInput" placeholder="0" min="0" max="99" />
+          </div>
+
+          <div class="modal-form-group">
+            <label>Rollen</label>
+            <div class="role-checkboxes">
+              <label>
+                <input type="checkbox" id="roleDribbler" />
+                Dribbler (D)
+              </label>
+              <label>
+                <input type="checkbox" id="roleInbounder" />
+                Inbounder (I)
+              </label>
+              <label>
+                <input type="checkbox" id="roleRunner" />
+                Runner (R)
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="submit" class="primary">Opslaan</button>
+            <button type="button" class="secondary" id="cancelBtn">Annuleren</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script>
@@ -454,6 +665,8 @@
       const specialIds = ["guus", "lucas", "sander", "niels"];
       const periodCount = 8;
       const playersPerPeriod = 5;
+
+      let editingPlayerId = null;
 
       function getDefaultState() {
         return {
@@ -491,6 +704,12 @@
       const rotationSummary = document.getElementById("rotationSummary");
       const matchGrid = document.getElementById("matchGrid");
       const addMatchBtn = document.getElementById("addMatchBtn");
+      const addPlayerBtn = document.getElementById("addPlayerBtn");
+      const playerModal = document.getElementById("playerModal");
+      const playerForm = document.getElementById("playerForm");
+      const closeModalBtn = document.getElementById("closeModalBtn");
+      const cancelBtn = document.getElementById("cancelBtn");
+      const modalTitle = document.getElementById("modalTitle");
 
       function saveState() {
         localStorage.setItem("basketballRotationState", JSON.stringify(state));
@@ -509,10 +728,11 @@
         return state.players.find((player) => player.id === playerId);
       }
 
-      function getRoleBadge(playerId, periodId) {
+      function getRoleBadge(playerId) {
         const player = playerById(playerId);
         if (!player) return "neutral";
         const p = player.roles;
+
         if (p.dribbler && p.inbounder && p.runner) return "multi";
         if (p.dribbler && p.inbounder) return "multi";
         if (p.dribbler && p.runner) return "multi";
@@ -544,6 +764,11 @@
 
       function renderRotationSummary() {
         const presentPlayers = getPresentPlayers();
+        if (!presentPlayers.length) {
+          rotationSummary.innerHTML = "";
+          return;
+        }
+
         const target = Math.round((periodCount * playersPerPeriod) / presentPlayers.length);
 
         rotationSummary.innerHTML = presentPlayers.map((player) => {
@@ -581,7 +806,7 @@
           const slots = Array.from({ length: playersPerPeriod }, (_, slotIndex) => {
             const selectedId = period.selected[slotIndex];
             const player = playerById(selectedId);
-            const badge = player ? getRoleBadge(selectedId, period.id) : "neutral";
+            const badge = player ? getRoleBadge(selectedId) : "neutral";
 
             return `
               <div class="slot-row">
@@ -595,6 +820,10 @@
                 <button class="slot-toggle ${selectedId ? "active" : ""}" data-period-id="${period.id}" data-slot-index="${slotIndex}" data-player-id="${selectedId || ""}" title="${selectedId ? "Verwijderen" : "Toevoegen"}">
                   ${selectedId ? "✓" : "+"}
                 </button>
+              </div>
+
+              <div class="slot-name">
+                ${player ? player.name : "Leeg"}
               </div>
               ${player ? `<div class="badge-row"><span class="role-badge ${badge}">${badge === "dribbler" ? "D" : badge === "inbounder" ? "I" : badge === "runner" ? "R" : badge === "multi" ? "M" : "N"}</span></div>` : ""}
             `;
@@ -698,6 +927,74 @@
         document.getElementById("matchOpponent").value = "";
       }
 
+      function openPlayerModal(playerId = null) {
+        editingPlayerId = playerId;
+
+        if (playerId) {
+          const player = playerById(playerId);
+          if (!player) return;
+
+          modalTitle.textContent = "Speler Bewerken";
+          document.getElementById("playerNameInput").value = player.name;
+          document.getElementById("playerNumberInput").value = player.number;
+          document.getElementById("roleDribbler").checked = player.roles.dribbler;
+          document.getElementById("roleInbounder").checked = player.roles.inbounder;
+          document.getElementById("roleRunner").checked = player.roles.runner;
+        } else {
+          modalTitle.textContent = "Speler Toevoegen";
+          playerForm.reset();
+          document.getElementById("roleDribbler").checked = false;
+          document.getElementById("roleInbounder").checked = false;
+          document.getElementById("roleRunner").checked = true;
+        }
+
+        playerModal.classList.add("show");
+      }
+
+      function closePlayerModal() {
+        playerModal.classList.remove("show");
+        editingPlayerId = null;
+      }
+
+      function savePlayer(e) {
+        e.preventDefault();
+
+        const name = document.getElementById("playerNameInput").value.trim();
+        if (!name) {
+          alert("Voer een naam in");
+          return;
+        }
+
+        const number = Number(document.getElementById("playerNumberInput").value) || 0;
+        const roles = {
+          dribbler: document.getElementById("roleDribbler").checked,
+          inbounder: document.getElementById("roleInbounder").checked,
+          runner: document.getElementById("roleRunner").checked
+        };
+
+        if (editingPlayerId) {
+          const player = playerById(editingPlayerId);
+          if (player) {
+            player.name = name;
+            player.number = number;
+            player.roles = roles;
+          }
+        } else {
+          const newId = "player_" + Date.now();
+          state.players.push({
+            id: newId,
+            name,
+            number,
+            present: true,
+            roles
+          });
+        }
+
+        saveState();
+        closePlayerModal();
+        render();
+      }
+
       function combinations(arr, size) {
         if (!size) return [[]];
         if (!arr.length) return [];
@@ -767,10 +1064,12 @@
       function generateAllPeriods() {
         const generated = generateFairRotation();
         if (!generated) return;
+
         state.periods = generated.map((ids, index) => ({
           id: index + 1,
           selected: ids
         }));
+
         saveState();
         renderSchedule();
         renderRotationSummary();
@@ -779,6 +1078,7 @@
       function resetState() {
         const ok = window.confirm("Reset alles?");
         if (!ok) return;
+
         const fresh = getDefaultState();
         state.players = fresh.players;
         state.periods = fresh.periods;
@@ -794,10 +1094,30 @@
         renderMatches();
       }
 
+      document.querySelectorAll(".collapse-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const panelId = btn.dataset.panel + "Panel";
+          const panel = document.getElementById(panelId);
+          const isCollapsed = panel.classList.contains("collapsed");
+
+          panel.classList.toggle("collapsed");
+          btn.textContent = isCollapsed ? "−" : "+";
+        });
+      });
+
       document.getElementById("generateBtn").addEventListener("click", generateAllPeriods);
       document.getElementById("resetBtn").addEventListener("click", resetState);
       document.getElementById("printBtn").addEventListener("click", () => window.print());
       addMatchBtn.addEventListener("click", addMatch);
+      addPlayerBtn.addEventListener("click", () => openPlayerModal());
+
+      playerForm.addEventListener("submit", savePlayer);
+      closeModalBtn.addEventListener("click", closePlayerModal);
+      cancelBtn.addEventListener("click", closePlayerModal);
+
+      playerModal.addEventListener("click", (e) => {
+        if (e.target === playerModal) closePlayerModal();
+      });
 
       document.addEventListener("change", (event) => {
         if (event.target.matches(".present-toggle")) {
@@ -844,6 +1164,7 @@
           const slotIndex = Number(event.target.dataset.slotIndex);
           const period = state.periods.find((p) => p.id === periodId);
           if (!period) return;
+
           period.selected[slotIndex] = event.target.value || null;
           saveState();
           renderSchedule();
