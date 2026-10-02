@@ -995,6 +995,21 @@
         render();
       }
 
+      function getRoleCounts(players) {
+        return players.reduce((acc, player) => {
+          if (player.roles.dribbler) acc.dribbler += 1;
+          if (player.roles.inbounder) acc.inbounder += 1;
+          if (player.roles.runner) acc.runner += 1;
+          if (specialIds.includes(player.id)) acc.special += 1;
+          return acc;
+        }, { dribbler: 0, inbounder: 0, runner: 0, special: 0 });
+      }
+
+      function isValidCombo(combo) {
+        const counts = getRoleCounts(combo);
+        return counts.dribbler >= 1 && counts.inbounder >= 1 && counts.runner >= 1 && counts.special <= 2;
+      }
+
       function combinations(arr, size) {
         if (!size) return [[]];
         if (!arr.length) return [];
@@ -1002,17 +1017,6 @@
         const withFirst = combinations(rest, size - 1).map((combo) => [first, ...combo]);
         const withoutFirst = combinations(rest, size);
         return [...withFirst, ...withoutFirst];
-      }
-
-      function isValidCombo(combo) {
-        const counts = { dribbler: 0, inbounder: 0, runner: 0, special: 0 };
-        combo.forEach((player) => {
-          if (player.roles.dribbler) counts.dribbler += 1;
-          if (player.roles.inbounder) counts.inbounder += 1;
-          if (player.roles.runner) counts.runner += 1;
-          if (specialIds.includes(player.id)) counts.special += 1;
-        });
-        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
       }
 
       function generateFairRotation() {
@@ -1023,9 +1027,21 @@
         }
 
         const validCombos = combinations(present, playersPerPeriod).filter(isValidCombo);
+
         if (!validCombos.length) {
-          alert("Geen geldige combinatie gevonden met de huidige rollen.");
-          return null;
+          const fallback = [];
+          const shuffled = [...present].sort(() => Math.random() - 0.5);
+
+          for (let i = 0; i < periodCount; i++) {
+            const group = [];
+            for (let j = 0; j < playersPerPeriod; j++) {
+              const player = shuffled[(i * playersPerPeriod + j) % shuffled.length];
+              group.push(player);
+            }
+            fallback.push(group);
+          }
+
+          return fallback.map((period) => period.map((player) => player ? player.id : null));
         }
 
         const targetPerPlayer = (periodCount * playersPerPeriod) / present.length;
@@ -1054,6 +1070,7 @@
           });
 
           if (!best) return null;
+
           selected.push(best.map((p) => p.id));
           best.forEach((player) => usage[player.id] += 1);
         }
