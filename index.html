@@ -573,17 +573,16 @@
           `;
         }).join("");
 
-        // Add event listeners to load and delete buttons
-        document.querySelectorAll("#loadMatchBtn").forEach(btn => {
+        document.querySelectorAll("#loadMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index);
+            const index = parseInt(e.target.dataset.index, 10);
             loadMatchSchedule(index);
           });
         });
 
-        document.querySelectorAll("#deleteMatchBtn").forEach(btn => {
+        document.querySelectorAll("#deleteMatchBtn").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            const index = parseInt(e.target.dataset.index);
+            const index = parseInt(e.target.dataset.index, 10);
             deleteMatch(index);
           });
         });
@@ -591,7 +590,7 @@
 
       function loadMatchSchedule(matchIndex) {
         if (state.matches[matchIndex]) {
-          state.periods = state.matches[matchIndex].periods.map(p => ({ ...p }));
+          state.periods = state.matches[matchIndex].periods.map((p) => ({ ...p }));
           saveState();
           renderSchedule();
         }
@@ -615,9 +614,9 @@
         }
 
         state.matches.push({
-          date: date,
-          opponent: opponent,
-          periods: state.periods.map(p => ({ ...p, selected: [...p.selected] }))
+          date,
+          opponent,
+          periods: state.periods.map((p) => ({ ...p, selected: [...p.selected] }))
         });
 
         saveState();
@@ -633,6 +632,22 @@
         const withFirst = combinations(rest, size - 1).map((combo) => [first, ...combo]);
         const withoutFirst = combinations(rest, size);
         return [...withFirst, ...withoutFirst];
+      }
+
+      function getComboRoleCounts(combo) {
+        const counts = { dribbler: 0, inbounder: 0, runner: 0, special: 0 };
+        combo.forEach((player) => {
+          if (player.roles.dribbler) counts.dribbler += 1;
+          if (player.roles.inbounder) counts.inbounder += 1;
+          if (player.roles.runner) counts.runner += 1;
+          if (specialIds.includes(player.id)) counts.special += 1;
+        });
+        return counts;
+      }
+
+      function isValidCombo(combo) {
+        const counts = getComboRoleCounts(combo);
+        return counts.dribbler === 2 && counts.runner === 2 && counts.inbounder === 1 && counts.special <= 2;
       }
 
       function scoreCombo(combo) {
@@ -656,84 +671,65 @@
         const present = getPresentPlayers();
         if (present.length < 5) {
           alert("Niet genoeg spelers aanwezig (minimaal 5 nodig).");
-          return;
+          return null;
         }
 
-        const playerRotationCount = {};
-        present.forEach(p => playerRotationCount[p.id] = 0);
+        const validCombos = combinations(present, 5).filter(isValidCombo);
+        if (!validCombos.length) {
+          alert("Er is geen geldige 5-speler combinatie mogelijk met de huidige rollen en regels.");
+          return null;
+        }
 
-        const periodRotations = Array(periodCount).fill(null).map(() => []);
+        const usage = Object.fromEntries(present.map((player) => [player.id, 0]));
+        const usedComboKeys = new Set();
+        const targetPerPlayer = (periodCount * 5) / present.length;
+        const selectedPeriods = [];
 
-        // Multi-pass algorithm to balance rotations
-        for (let pass = 0; pass < 3; pass++) {
-          for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
-            if (periodRotations[periodIdx].length >= 5) continue;
+        for (let periodIndex = 0; periodIndex < periodCount; periodIndex++) {
+          let bestCombo = null;
+          let bestScore = Number.POSITIVE_INFINITY;
 
-            const specialInPeriod = periodRotations[periodIdx].filter(id => specialIds.includes(id)).length;
-            const needMore = 5 - periodRotations[periodIdx].length;
+          for (const combo of validCombos) {
+            const comboIds = combo.map((player) => player.id).sort();
+            const comboKey = comboIds.join("|");
+            const repeatPenalty = usedComboKeys.has(comboKey) ? 1200 : 0;
+            const fairnessPenalty = combo.reduce((total, player) => {
+              const nextUsage = usage[player.id] + 1;
+              return total + Math.pow(nextUsage - targetPerPlayer, 2) * 30;
+            }, 0);
+            const specialPenalty = combo.reduce((total, player) => {
+              if (specialIds.includes(player.id)) return total + usage[player.id] * 18;
+              return total;
+            }, 0);
+            const overusePenalty = combo.reduce((total, player) => {
+              return total + Math.max(0, usage[player.id] - Math.ceil(targetPerPlayer)) * 200;
+            }, 0);
+            const previousUsagePenalty = combo.reduce((total, player) => total + usage[player.id] * 12, 0);
+            const score = repeatPenalty + fairnessPenalty + specialPenalty + overusePenalty + previousUsagePenalty;
 
-            const candidates = present.filter(p => 
-              !periodRotations[periodIdx].includes(p.id) &&
-              !(specialIds.includes(p.id) && specialInPeriod >= 2)
-            ).sort((a, b) => playerRotationCount[a.id] - playerRotationCount[b.id]);
-
-            for (let i = 0; i < Math.min(needMore, candidates.length); i++) {
-              const player = candidates[i];
-              periodRotations[periodIdx].push(player.id);
-              playerRotationCount[player.id]++;
+            if (score < bestScore) {
+              bestScore = score;
+              bestCombo = combo;
             }
           }
-        }
 
-        // Fill remaining slots with the least rotated players
-        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
-          while (periodRotations[periodIdx].length < 5) {
-            const specialInPeriod = periodRotations[periodIdx].filter(id => specialIds.includes(id)).length;
-            const remaining = present.filter(p => 
-              !periodRotations[periodIdx].includes(p.id) &&
-              !(specialIds.includes(p.id) && specialInPeriod >= 2)
-            );
-
-            if (remaining.length === 0) break;
-
-            const leastRotated = remaining.reduce((a, b) => 
-              playerRotationCount[a.id] < playerRotationCount[b.id] ? a : b
-            );
-            periodRotations[periodIdx].push(leastRotated.id);
-            playerRotationCount[leastRotated.id]++;
+          if (!bestCombo) {
+            alert("Kon geen evenwichtige verdeling maken voor alle periodes.");
+            return null;
           }
+
+          usedComboKeys.add(bestCombo.map((player) => player.id).sort().join("|"));
+          bestCombo.forEach((player) => {
+            usage[player.id] += 1;
+          });
+          selectedPeriods.push(bestCombo.map((player) => player.id));
         }
 
-        // Pad with nulls
-        periodRotations.forEach(rotation => {
-          while (rotation.length < 5) rotation.push(null);
+        return selectedPeriods.map((period) => {
+          const selected = [...period];
+          while (selected.length < 5) selected.push(null);
+          return selected.slice(0, 5);
         });
-
-        // Try to optimize for role requirements
-        for (let periodIdx = 0; periodIdx < periodCount; periodIdx++) {
-          const playerIds = periodRotations[periodIdx].filter(id => id !== null);
-          const players = playerIds.map(id => playerById(id));
-          const combo = players;
-
-          // Check if this combo is valid
-          const counts = getCounts({ selected: periodRotations[periodIdx] });
-          if (counts.dribbler !== 2 || counts.inbounder !== 1 || counts.runner !== 2) {
-            // Try to swap a player to get the right counts
-            const needMore = 5 - playerIds.length;
-            if (needMore > 0) {
-              const missing = present.filter(p => !periodRotations[periodIdx].includes(p.id));
-              if (missing.length > 0) {
-                const replacement = missing[0];
-                const slotToReplace = periodRotations[periodIdx].findIndex(id => id === null);
-                if (slotToReplace >= 0) {
-                  periodRotations[periodIdx][slotToReplace] = replacement.id;
-                }
-              }
-            }
-          }
-        }
-
-        return periodRotations;
       }
 
       function generateAllPeriods() {
